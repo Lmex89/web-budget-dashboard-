@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { CreditCard } from '@/types'
 import { useCreditCardStore } from '@/stores/creditCards'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import PaperCard from '@/components/ui/PaperCard.vue'
 import FormField from '@/components/ui/FormField.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import { formatCurrency, clamp } from '@/utils/format'
+import { formatCurrency, formatDate, clamp } from '@/utils/format'
 import { useForm } from '@/composables/useForm'
 
 const creditCardStore = useCreditCardStore()
 
 const UTILIZATION_HIGH = 80
 const UTILIZATION_MEDIUM = 50
+
+const expandedCard = ref<string | null>(null)
 
 interface CreditCardForm {
   name: string
@@ -72,6 +74,17 @@ function getUtilizationBarTone(value: number): string {
   if (value > UTILIZATION_HIGH) return 'bg-danger'
   if (value > UTILIZATION_MEDIUM) return 'bg-warn'
   return 'bg-sage'
+}
+
+async function toggleExpenses(cardId: string) {
+  if (expandedCard.value === cardId) {
+    expandedCard.value = null
+    return
+  }
+  expandedCard.value = cardId
+  if (!creditCardStore.getExpenses(cardId).length) {
+    await creditCardStore.fetchCardExpenses(cardId)
+  }
 }
 </script>
 
@@ -227,6 +240,34 @@ function getUtilizationBarTone(value: number): string {
             :class="getUtilizationBarTone(utilization(card))"
             :style="{ width: utilization(card) + '%' }"
           />
+        </div>
+
+        <button
+          class="mt-4 text-xs font-semibold uppercase tracking-wide text-accent hover:text-accent-dark"
+          @click="toggleExpenses(card.id)"
+        >
+          {{ expandedCard === card.id ? 'Hide expenses' : 'Show expenses' }}
+          ({{ creditCardStore.getExpenses(card.id).length }})
+        </button>
+
+        <div v-if="expandedCard === card.id" class="mt-3 space-y-2 animate-fade-up">
+          <div
+            v-for="expense in creditCardStore.getExpenses(card.id)"
+            :key="expense.id"
+            class="flex items-center justify-between text-sm py-1.5 border-t border-rule"
+          >
+            <div class="min-w-0">
+              <p class="truncate font-medium">{{ expense.description || expense.category_name }}</p>
+              <p class="text-xs text-muted">{{ formatDate(expense.date) }} · {{ expense.category_name }}</p>
+            </div>
+            <p class="font-semibold tabular-nums shrink-0 ml-3">{{ formatCurrency(expense.amount) }}</p>
+          </div>
+          <p
+            v-if="!creditCardStore.getExpenses(card.id).length"
+            class="text-xs text-muted text-center py-2"
+          >
+            No expenses for this card yet.
+          </p>
         </div>
       </PaperCard>
     </div>

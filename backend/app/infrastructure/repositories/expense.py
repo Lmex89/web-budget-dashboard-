@@ -46,7 +46,8 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         page_size: int = 20,
         category_id: Optional[str] = None,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
+        credit_card_id: Optional[str] = None,
     ) -> tuple[List[Expense], int]:
         conditions = [Expense.family_id == family_id]
 
@@ -59,6 +60,9 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         if end_date:
             conditions.append(Expense.date <= datetime.fromisoformat(end_date))
             logger.debug(f"Filtering to date: {end_date}")
+        if credit_card_id:
+            conditions.append(Expense.credit_card_id == credit_card_id)
+            logger.debug(f"Filtering by credit card: {credit_card_id}")
 
         try:
             count_stmt = select(func.count()).select_from(Expense).where(and_(*conditions))

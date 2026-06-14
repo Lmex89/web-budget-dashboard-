@@ -16,6 +16,7 @@ export interface ExpenseListItem {
   payment_method: string
   category_name: string
   user_name: string
+  credit_card_id: string | null
   created_at: string
 }
 

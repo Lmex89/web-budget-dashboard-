@@ -60,12 +60,13 @@ class ExpenseService:
         category_id: Optional[str] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
+        credit_card_id: Optional[str] = None,
     ) -> tuple[List[Expense], int]:
         """Paginated list of expenses for the given family."""
         logger.info(f"Listing expenses: family={family_id}, page={page}, size={page_size}")
         async with self.uow:
             return await self.uow.expenses.get_by_family(
-                family_id, page, page_size, category_id, start_date, end_date,
+                family_id, page, page_size, category_id, start_date, end_date, credit_card_id,
             )
 
     async def create(self, data: ExpenseCreate, family_id: str, user_id: str) -> Expense:

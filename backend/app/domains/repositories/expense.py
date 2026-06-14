@@ -17,7 +17,8 @@ class ExpenseRepository(ABC):
         page_size: int = 20,
         category_id: Optional[str] = None,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
+        credit_card_id: Optional[str] = None,
     ) -> tuple[List[Expense], int]:
         pass
     

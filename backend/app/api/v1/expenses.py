@@ -37,6 +37,7 @@ async def list_expenses(
     category_id: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None, description="ISO format date"),
     end_date: Optional[str] = Query(None, description="ISO format date"),
+    credit_card_id: Optional[str] = Query(None),
     current_user: User = Depends(get_current_active_user),
     service: ExpenseService = Depends(get_expense_service),
 ):
@@ -48,6 +49,7 @@ async def list_expenses(
         category_id=category_id,
         start_date=start_date,
         end_date=end_date,
+        credit_card_id=credit_card_id,
     )
 
     return PaginatedResponse(
@@ -60,6 +62,7 @@ async def list_expenses(
                 "payment_method": e.payment_method,
                 "category_name": e.category.name,
                 "user_name": e.user.full_name,
+                "credit_card_id": e.credit_card_id,
                 "created_at": e.created_at,
             }
             for e in expenses
