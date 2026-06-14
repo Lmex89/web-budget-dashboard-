@@ -25,6 +25,11 @@ Instructions for AI coding agents working in this repository.
 > **Local backend note:** All local backend commands require a `backend/.env` file. The default `DATABASE_URL` in `app/core/config.py` points to `localhost:3306`, but Docker Compose exposes MariaDB on host port `3308`. Copy `backend/.env.example` to `backend/.env` and adjust the port before running migrations or the dev server.
 >
 > **Docker secrets:** All sensitive/config values live in `.env.docker` (gitignored) at the project root. Every service in `docker-compose.yml` loads it via `env_file: .env.docker`. Copy `.env.docker.example` to `.env.docker` and edit it to change DB credentials, JWT secret, or other runtime config before running `docker compose up`.
+>
+> **Frontend API URL (`VITE_API_BASE_URL`):** Defined in `.env.docker` as the single source of truth. The frontend has no hardcoded fallback — it reads exclusively from `import.meta.env.VITE_API_BASE_URL`. For dev (`docker compose up`) the `env_file` passes it at runtime. For prod builds (`docker compose --profile prod`), you **must** pass `--env-file .env.docker` so the build arg resolves:
+> ```bash
+> docker compose --env-file .env.docker --profile prod up -d
+> ```
 
 ## Architecture boundaries (required)
 

@@ -33,8 +33,8 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 # 1. Start all services (dev mode with hot-reload)
 docker compose up -d
 
-# 2. Start in production mode (nginx-served frontend on port 80)
-docker compose --profile prod up -d
+# 2. Start in production mode (nginx-served frontend on port 92)
+docker compose --env-file .env.docker --profile prod up -d
 
 # 3. Run database migrations
 docker compose exec backend python -m migrations.run_migrations
