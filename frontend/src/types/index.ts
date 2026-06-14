@@ -62,6 +62,7 @@ export interface CreateExpensePayload {
   category_id: string
   is_installment: boolean
   total_installments: number | null
+  credit_card_id?: string | null
 }
 
 export interface CreateCategoryPayload {

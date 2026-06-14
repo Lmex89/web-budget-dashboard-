@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
+import { useCreditCardStore } from '@/stores/creditCards'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import PaperCard from '@/components/ui/PaperCard.vue'
 import FormField from '@/components/ui/FormField.vue'
@@ -12,6 +13,7 @@ import type { CreateExpensePayload } from '@/types'
 
 const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
+const creditCardStore = useCreditCardStore()
 
 interface ExpenseForm {
   amount: number
@@ -19,6 +21,7 @@ interface ExpenseForm {
   date: string
   payment_method: string
   category_id: string
+  credit_card_id: string
   is_installment: boolean
   total_installments: number | null
 }
@@ -29,15 +32,17 @@ const initialForm: ExpenseForm = {
   date: new Date().toISOString().split('T')[0],
   payment_method: 'debit',
   category_id: '',
+  credit_card_id: '',
   is_installment: false,
   total_installments: null,
 }
 
-const { form, showForm, toggleForm, handleSubmit } = useForm<ExpenseForm>({
+const { form, showForm, toggleForm, handleSubmit, errorMessage } = useForm<ExpenseForm>({
   initialValues: initialForm,
   onSubmit: async (values) => {
     const payload: CreateExpensePayload = {
       ...values,
+      credit_card_id: values.credit_card_id || null,
       date: new Date(values.date).toISOString(),
     }
     await expenseStore.createExpense(payload)
@@ -45,9 +50,12 @@ const { form, showForm, toggleForm, handleSubmit } = useForm<ExpenseForm>({
   },
 })
 
+const showCreditCardField = computed(() => form.value.payment_method === 'credit')
+
 onMounted(() => {
   expenseStore.fetchExpenses()
   categoryStore.fetchCategories()
+  creditCardStore.fetchCreditCards()
 })
 
 async function handleDelete(id: string) {
@@ -115,7 +123,18 @@ async function handleDelete(id: string) {
             </option>
           </select>
         </FormField>
+
+        <FormField v-if="showCreditCardField" label="Credit card" for-id="credit_card_id">
+          <select id="credit_card_id" v-model="form.credit_card_id" class="eb-select">
+            <option value="" disabled>Select a card</option>
+            <option v-for="card in creditCardStore.creditCards" :key="card.id" :value="card.id">
+              {{ card.name }}
+            </option>
+          </select>
+        </FormField>
       </div>
+
+      <p v-if="errorMessage" class="text-sm text-danger">{{ errorMessage }}</p>
 
       <div class="flex items-center gap-3 pt-1">
         <button type="submit" class="eb-btn eb-btn-primary">Save expense</button>

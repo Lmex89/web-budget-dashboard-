@@ -128,7 +128,10 @@ class Expense(Base):
     amount: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    payment_method: Mapped[PaymentMethod] = mapped_column(Enum(PaymentMethod), nullable=False)
+    payment_method: Mapped[PaymentMethod] = mapped_column(
+        Enum(PaymentMethod, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
     is_installment: Mapped[bool] = mapped_column(Boolean, default=False)
     total_installments: Mapped[int | None] = mapped_column(Integer, nullable=True)
     installment_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
