@@ -4,6 +4,7 @@ Seed script: creates the default admin user and demo family.
 Run AFTER migrations are complete:
     python -m migrations.seed
 """
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.core.logging import setup_logging  # noqa: E402
 from app.core.security import get_password_hash  # noqa: E402
+from migrations.run_migrations import _parse_db_url  # noqa: E402
 
 setup_logging()
 
@@ -29,8 +31,15 @@ VALUES ('00000000-0000-0000-0000-000000000002', '{email}', '{password}', 'Admin 
 def seed():
     logger.info("Seeding default user: {} / {}", DEFAULT_EMAIL, DEFAULT_PASSWORD)
 
+    db_url = os.environ.get("DATABASE_URL", "")
+    if not db_url:
+        logger.error("DATABASE_URL environment variable is not set")
+        sys.exit(1)
+
+    db = _parse_db_url(db_url)
+
     result = subprocess.run(
-        ["mariadb", "--skip-ssl", "-u", "budget_user", "-pbudget_pass", "-h", "db", "-P", "3306", "family_budget"],
+        ["mariadb", "--skip-ssl", "-u", db["user"], f"-p{db['password']}", "-h", db["host"], "-P", db["port"], db["database"]],
         input=SQL,
         capture_output=True,
         text=True,

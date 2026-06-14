@@ -2,7 +2,11 @@
 Migration runner for raw SQL migrations.
 
 Uses the MariaDB/MySQL CLI directly (not SQLAlchemy) for reliable DDL execution.
+Expects DATABASE_URL env var (set via .env.docker in Docker Compose) with format:
+mysql+aiomysql://user:password@host:port/database
 """
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +18,23 @@ from app.core.logging import setup_logging
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 setup_logging()
+
+
+def _parse_db_url(url: str) -> dict[str, str]:
+    match = re.match(
+        r"mysql\+aiomysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)",
+        url,
+    )
+    if not match:
+        logger.error("Cannot parse DATABASE_URL: {}", url)
+        sys.exit(1)
+    return {
+        "user": match.group(1),
+        "password": match.group(2),
+        "host": match.group(3),
+        "port": match.group(4),
+        "database": match.group(5),
+    }
 
 
 def get_migration_files() -> list[Path]:
@@ -31,6 +52,13 @@ def run_migrations():
     logger.info("STARTING DATABASE MIGRATIONS")
     logger.info("=" * 60)
 
+    db_url = os.environ.get("DATABASE_URL", "")
+    if not db_url:
+        logger.error("DATABASE_URL environment variable is not set")
+        sys.exit(1)
+
+    db = _parse_db_url(db_url)
+
     migration_files = get_migration_files()
     if not migration_files:
         logger.warning("No migration files found. Nothing to apply.")
@@ -46,11 +74,11 @@ def run_migrations():
             [
                 "mariadb",
                 "--skip-ssl",
-                "-u", "budget_user",
-                "-pbudget_pass",
-                "-h", "db",
-                "-P", "3306",
-                "family_budget",
+                "-u", db["user"],
+                f"-p{db['password']}",
+                "-h", db["host"],
+                "-P", db["port"],
+                db["database"],
             ],
             input=sql_content,
             capture_output=True,
