@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useExpenseStore } from '@/stores/expenses'
+import { useCategoryStore } from '@/stores/categories'
 
 const expenseStore = useExpenseStore()
+const categoryStore = useCategoryStore()
 const showForm = ref(false)
 
 const form = ref({
@@ -17,6 +19,7 @@ const form = ref({
 
 onMounted(() => {
   expenseStore.fetchExpenses()
+  categoryStore.fetchCategories()
 })
 
 async function handleCreate() {
@@ -80,6 +83,9 @@ function resetForm() {
           <label class="label"><span class="label-text">Category</span></label>
           <select v-model="form.category_id" class="select select-bordered" required>
             <option value="" disabled>Select category</option>
+            <option v-for="category in categoryStore.categories" :key="category.id" :value="category.id">
+              {{ category.name }}
+            </option>
           </select>
         </div>
       </div>
