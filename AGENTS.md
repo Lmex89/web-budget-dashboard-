@@ -23,6 +23,8 @@ Instructions for AI coding agents working in this repository.
 - Run backend tests (from `backend/`): `pytest`
 
 > **Local backend note:** All local backend commands require a `backend/.env` file. The default `DATABASE_URL` in `app/core/config.py` points to `localhost:3306`, but Docker Compose exposes MariaDB on host port `3308`. Copy `backend/.env.example` to `backend/.env` and adjust the port before running migrations or the dev server.
+>
+> **Docker secrets:** All sensitive/config values live in `.env.docker` (gitignored) at the project root. Every service in `docker-compose.yml` loads it via `env_file: .env.docker`. Edit this file to change DB credentials, JWT secret, or other runtime config before running `docker compose up`.
 
 ## Architecture boundaries (required)
 

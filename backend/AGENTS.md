@@ -14,6 +14,8 @@ backend-specific instructions only.
 - Type check: `mypy app/`
 
 > **Local `.env` required.** Copy `.env.example` → `.env` and adjust `DATABASE_URL` port to `3308`.
+>
+> **Docker env:** All sensitive config for Docker Compose lives in `/.env.docker` at the project root. Edit that file for Docker DB credentials, JWT secret, etc.
 
 ## Domain structure
 
