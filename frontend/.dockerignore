@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.git/
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+README.md
+AGENTS.md
+.agents/
+skills-lock.json

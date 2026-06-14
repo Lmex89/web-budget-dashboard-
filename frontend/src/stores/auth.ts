@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { shallowRef, ref, computed } from 'vue'
 import type { User } from '@/types'
 import api from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<User | null>(null)
+  const user = shallowRef<User | null>(null)
   const authReady = ref(false)
 
   const isAuthenticated = computed(() => !!user.value)

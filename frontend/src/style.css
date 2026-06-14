@@ -1,3 +1,300 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --paper: #f7f4ee;
+    --paper-2: #ffffff;
+    --paper-dark: #efebe3;
+    --ink: #1c1917;
+    --ink-muted: #78716c;
+    --ink-faint: #a8a29e;
+    --rule: #e7e2d9;
+    --rule-strong: #d6cfc3;
+    --accent: #b85c3f;
+    --accent-light: #f3e7e1;
+    --accent-dark: #8f4430;
+    --sage: #5c7568;
+    --sage-light: #e8eeea;
+    --warn: #c68e38;
+    --warn-light: #f8f1e3;
+    --danger: #b54242;
+    --danger-light: #f6e3e3;
+
+    --font-display: 'Bodoni Moda', Georgia, 'Times New Roman', serif;
+    --font-body: 'Sora', system-ui, -apple-system, sans-serif;
+
+    --radius-sm: 0.5rem;
+    --radius-md: 0.875rem;
+    --radius-lg: 1.25rem;
+
+    --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05);
+    --shadow-md: 0 10px 28px rgba(28, 25, 23, 0.06);
+    --shadow-lg: 0 22px 50px rgba(28, 25, 23, 0.08);
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-paper text-ink antialiased;
+    font-family: var(--font-body);
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* subtle paper grain */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+  }
+}
+
+@layer components {
+  /* Typography */
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 6vw, 3.25rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .page-subtitle {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  /* Buttons */
+  .eb-btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200;
+  }
+
+  .eb-btn:active {
+    transform: scale(0.97);
+  }
+
+  .eb-btn-primary {
+    @apply bg-ink text-paper shadow-paper;
+  }
+
+  .eb-btn-primary:hover {
+    @apply bg-accent shadow-paper-lg;
+  }
+
+  .eb-btn-accent {
+    @apply bg-accent text-white shadow-paper;
+  }
+
+  .eb-btn-accent:hover {
+    @apply bg-accent-dark;
+  }
+
+  .eb-btn-ghost {
+    @apply bg-transparent text-ink border border-rule;
+  }
+
+  .eb-btn-ghost:hover {
+    @apply bg-paper-dark border-rule-strong;
+  }
+
+  .eb-btn-danger {
+    @apply bg-danger-light text-danger;
+  }
+
+  .eb-btn-danger:hover {
+    @apply bg-danger text-white;
+  }
+
+  /* Form controls */
+  .eb-label {
+    @apply block text-xs font-semibold uppercase tracking-widest text-muted mb-1.5;
+  }
+
+  .eb-input,
+  .eb-select {
+    @apply w-full px-4 py-3 bg-paper-2 border border-rule rounded-xl text-ink text-[0.9375rem] transition-all duration-200;
+  }
+
+  .eb-input::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .eb-input:focus,
+  .eb-select:focus {
+    @apply outline-none border-accent;
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+
+  /* Cards */
+  .paper-card {
+    @apply bg-paper-2 border border-rule rounded-2xl shadow-paper;
+  }
+
+  .paper-card-filled {
+    @apply bg-paper-dark border border-rule rounded-2xl;
+  }
+
+  /* Chips */
+  .chip {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-[0.6875rem] font-bold uppercase tracking-wider;
+  }
+
+  .chip-sage {
+    @apply bg-sage-light text-sage;
+  }
+
+  .chip-accent {
+    @apply bg-accent-light text-accent-dark;
+  }
+
+  .chip-warn {
+    @apply bg-warn-light text-warn;
+  }
+
+  .chip-muted {
+    @apply bg-paper-dark text-muted;
+  }
+
+  .chip-danger {
+    @apply bg-danger-light text-danger;
+  }
+
+  /* Progress */
+  .progress-track {
+    @apply h-1 bg-paper-dark rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full bg-ink rounded-full;
+    transition: width 0.8s var(--ease-out-expo);
+  }
+
+  /* Tables */
+  .table-editorial {
+    @apply w-full border-collapse;
+  }
+
+  .table-editorial th {
+    @apply text-left text-xs font-bold uppercase tracking-widest text-muted px-4 py-3 border-b border-rule;
+  }
+
+  .table-editorial td {
+    @apply px-4 py-4 text-[0.9375rem] border-b border-rule;
+  }
+
+  .table-editorial tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* Lists */
+  .list-row {
+    @apply flex items-center justify-between py-3.5 border-b border-rule last:border-b-0;
+  }
+
+  /* Navigation */
+  .desktop-nav-link {
+    @apply flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted transition-colors rounded-lg;
+  }
+
+  .desktop-nav-link:hover {
+    @apply text-ink bg-paper-dark;
+  }
+
+  .desktop-nav-link.active {
+    @apply text-ink bg-paper-dark;
+  }
+
+  .desktop-nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 1.25rem;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .bottom-nav-link {
+    @apply flex flex-col items-center justify-center gap-1 text-muted transition-colors;
+  }
+
+  .bottom-nav-link.active {
+    @apply text-accent;
+  }
+
+  .bottom-nav-link svg {
+    @apply w-5 h-5;
+    stroke-width: 1.7;
+  }
+
+  .bottom-nav-link span {
+    @apply text-[0.625rem] font-semibold tracking-wide;
+  }
+
+  /* Utilities */
+  .rule-thin {
+    @apply h-px bg-rule;
+  }
+
+  .rule-thick {
+    @apply h-0.5 bg-ink;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+}

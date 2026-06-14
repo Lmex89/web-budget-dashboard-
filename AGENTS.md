@@ -2,6 +2,10 @@
 
 Instructions for AI coding agents working in this repository.
 
+> **UPDATE RULES:**
+> 1. After every change (new feature, refactor, config change, or bugfix), update this `AGENTS.md` and the relevant `backend/AGENTS.md` / `frontend/AGENTS.md`. Keep fast commands, file references, architecture notes, and conventions in sync with the actual codebase.
+> 2. Every new command (docker, npm, python, etc.) must be added to the "Quick Start" or relevant section in `README.md`. Keep the README in sync with the actual workflow at all times.
+
 ## Project at a glance
 
 - Monorepo: FastAPI backend + Vue frontend + Docker Compose.
@@ -43,6 +47,9 @@ Each domain concern gets its own focused service class:
 
 | Service | Responsibility |
 |---|---|
+| `CategoryService` | Family-scoped category list and create |
+| `CreditCardService` | Family-scoped credit card list and create |
+| `DebtService` | Family-scoped debt list and create |
 | `ExpenseService` | CRUD for expenses, validation, family-scoping |
 | `InstallmentService` | Installment generation, overdue detection, status tracking |
 | `AnalyticsService` | Monthly summaries, category distributions, trends, card utilization |
@@ -80,6 +87,15 @@ Service rules:
 - Keep API response envelope consistency with schemas in [backend/app/schemas/common.py](backend/app/schemas/common.py).
 - Money values use Decimal/Numeric in domain and schema models (see [backend/app/models/__init__.py](backend/app/models/__init__.py) and [backend/app/schemas/expense.py](backend/app/schemas/expense.py)); avoid introducing float math in business logic.
 - Custom exception classes are organized by domain in [backend/app/core/exceptions.py](backend/app/core/exceptions.py).
+- Debt API/frontend payloads should preserve backend field names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) to avoid adapter drift in `frontend/src/stores/debts.ts` and debt views.
+
+## Docker optimization
+
+- Backend build context is `./backend`. A `.dockerignore` file there excludes `__pycache__/`, `.venv`, `.env`, `tests/`, and IDE files from the build context.
+- Multi-stage build: builder installs deps with `--no-compile` and deletes `.pyc`/`__pycache__`; runtime stage clears `/var/cache/apk/`.
+- `mysql-client` is included at runtime for migration CLI. Consider a dedicated migration image if size becomes critical.
+- Frontend dev uses `Dockerfile.dev` (hot-reload via `npm run dev -- --host`). Frontend prod uses `Dockerfile.prod` (multi-stage: node build → nginx alpine serve with SPA routing).
+- **Frontend design**: The app uses an editorial/magazine aesthetic with mobile-first layout. See [frontend/AGENTS.md](frontend/AGENTS.md) for design tokens, component classes, and layout conventions.
 
 ## Migration and schema caveat
 
@@ -94,7 +110,11 @@ Service rules:
 - App bootstrap: [backend/app/main.py](backend/app/main.py)
 - Config and env defaults: [backend/app/core/config.py](backend/app/core/config.py)
 - Compose runtime wiring: [docker-compose.yml](docker-compose.yml)
+- Backend Docker context: [backend/Dockerfile](backend/Dockerfile) + [backend/.dockerignore](backend/.dockerignore)
+- Frontend dev Docker: [frontend/Dockerfile.dev](frontend/Dockerfile.dev)
+- Frontend prod Docker: [frontend/Dockerfile.prod](frontend/Dockerfile.prod) + [frontend/nginx.conf](frontend/nginx.conf)
 - Expense API flow (good vertical slice): [backend/app/api/v1/expenses.py](backend/app/api/v1/expenses.py)
+- Debt API flow (list/create): [backend/app/api/v1/debts.py](backend/app/api/v1/debts.py)
 - Service layer entry point: [backend/app/dependencies/services.py](backend/app/dependencies/services.py)
 - Domain models (all entities): [backend/app/models/\_\_init\_\_.py](backend/app/models/__init__.py)
 - Exception hierarchy: [backend/app/core/exceptions.py](backend/app/core/exceptions.py)

@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { shallowRef, ref } from 'vue'
 import type { CreditCard, CreditCardCreatePayload } from '@/types'
 import api from '@/services/api'
 
 export const useCreditCardStore = defineStore('creditCards', () => {
-  const creditCards = ref<CreditCard[]>([])
+  const creditCards = shallowRef<CreditCard[]>([])
   const loading = ref(false)
 
   async function fetchCreditCards() {

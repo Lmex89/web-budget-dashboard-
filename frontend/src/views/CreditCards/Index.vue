@@ -1,25 +1,49 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import type { CreditCard } from '@/types'
 import { useCreditCardStore } from '@/stores/creditCards'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import PaperCard from '@/components/ui/PaperCard.vue'
+import FormField from '@/components/ui/FormField.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import { formatCurrency, clamp } from '@/utils/format'
+import { useForm } from '@/composables/useForm'
 
 const creditCardStore = useCreditCardStore()
-const showForm = ref(false)
-const errorMessage = ref('')
-const submitting = ref(false)
 
-const form = ref({
+const UTILIZATION_HIGH = 80
+const UTILIZATION_MEDIUM = 50
+
+interface CreditCardForm {
+  name: string
+  last_four_digits: string
+  limit: number
+  closing_day: number
+  due_day: number
+  current_balance: number
+}
+
+const initialForm: CreditCardForm = {
   name: '',
   last_four_digits: '',
   limit: 0,
   closing_day: 1,
   due_day: 1,
   current_balance: 0,
-})
+}
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
+const { form, showForm, errorMessage, isSubmitting, toggleForm, handleSubmit } = useForm<CreditCardForm>({
+  initialValues: initialForm,
+  onSubmit: async (values) => {
+    await creditCardStore.createCreditCard({
+      name: values.name.trim(),
+      last_four_digits: values.last_four_digits.trim() || null,
+      limit: Number(values.limit),
+      closing_day: Number(values.closing_day),
+      due_day: Number(values.due_day),
+      current_balance: Number(values.current_balance),
+    })
+  },
 })
 
 onMounted(async () => {
@@ -31,149 +55,180 @@ function toNumber(value: string | number): number {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-function formatCurrency(value: string | number): string {
-  return currencyFormatter.format(toNumber(value))
-}
-
 function utilization(card: CreditCard): number {
   const limit = toNumber(card.limit)
-  if (limit <= 0) {
-    return 0
-  }
-  const balance = toNumber(card.current_balance)
-  const ratio = (balance / limit) * 100
-  return Math.max(0, Math.min(100, Math.round(ratio)))
+  if (limit <= 0) return 0
+  const ratio = (toNumber(card.current_balance) / limit) * 100
+  return clamp(Math.round(ratio), 0, 100)
 }
 
-function resetForm() {
-  form.value = {
-    name: '',
-    last_four_digits: '',
-    limit: 0,
-    closing_day: 1,
-    due_day: 1,
-    current_balance: 0,
-  }
+function getUtilizationTone(value: number): string {
+  if (value > UTILIZATION_HIGH) return 'chip-danger'
+  if (value > UTILIZATION_MEDIUM) return 'chip-warn'
+  return 'chip-sage'
 }
 
-async function handleCreate() {
-  errorMessage.value = ''
-  submitting.value = true
-
-  try {
-    await creditCardStore.createCreditCard({
-      name: form.value.name.trim(),
-      last_four_digits: form.value.last_four_digits.trim() || null,
-      limit: Number(form.value.limit),
-      closing_day: Number(form.value.closing_day),
-      due_day: Number(form.value.due_day),
-      current_balance: Number(form.value.current_balance),
-    })
-    showForm.value = false
-    resetForm()
-  } catch (error: any) {
-    errorMessage.value = error?.response?.data?.error?.message || 'Failed to create credit card'
-  } finally {
-    submitting.value = false
-  }
+function getUtilizationBarTone(value: number): string {
+  if (value > UTILIZATION_HIGH) return 'bg-danger'
+  if (value > UTILIZATION_MEDIUM) return 'bg-warn'
+  return 'bg-sage'
 }
 </script>
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold">Credit cards</h1>
-        <p class="text-base-content/60 text-sm">Track limits, balances, and due dates</p>
-      </div>
-      <button class="btn btn-primary" @click="showForm = !showForm">
-        {{ showForm ? 'Cancel' : '+ Add card' }}
-      </button>
-    </div>
+    <PageHeader title="Credit cards" subtitle="Limits, balances, and due dates at a glance.">
+      <template #action>
+        <button class="eb-btn" :class="showForm ? 'eb-btn-ghost' : 'eb-btn-primary'" @click="toggleForm">
+          {{ showForm ? 'Cancel' : 'Add card' }}
+        </button>
+      </template>
+    </PageHeader>
 
-    <form v-if="showForm" class="card bg-base-100 shadow-sm p-6 space-y-4" @submit.prevent="handleCreate">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="form-control">
-          <label class="label"><span class="label-text">Card name</span></label>
-          <input v-model="form.name" type="text" class="input input-bordered" maxlength="100" required />
-        </div>
-        <div class="form-control">
-          <label class="label"><span class="label-text">Last 4 digits (optional)</span></label>
+    <form
+      v-if="showForm"
+      class="paper-card p-5 md:p-6 space-y-5 animate-fade-up"
+      @submit.prevent="handleSubmit"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <FormField label="Card name" for-id="card-name">
           <input
+            id="card-name"
+            v-model="form.name"
+            type="text"
+            class="eb-input"
+            maxlength="100"
+            placeholder="e.g. Platinum Card"
+            required
+          />
+        </FormField>
+
+        <FormField label="Last 4 digits" for-id="card-digits">
+          <input
+            id="card-digits"
             v-model="form.last_four_digits"
             type="text"
-            class="input input-bordered"
+            class="eb-input"
             maxlength="4"
             pattern="[0-9]{4}"
             placeholder="1234"
           />
-        </div>
+        </FormField>
 
-        <div class="form-control">
-          <label class="label"><span class="label-text">Card limit</span></label>
-          <input v-model.number="form.limit" type="number" class="input input-bordered" min="0.01" step="0.01" required />
-        </div>
-        <div class="form-control">
-          <label class="label"><span class="label-text">Current balance</span></label>
-          <input v-model.number="form.current_balance" type="number" class="input input-bordered" min="0" step="0.01" />
-        </div>
+        <FormField label="Card limit" for-id="card-limit">
+          <input
+            id="card-limit"
+            v-model.number="form.limit"
+            type="number"
+            class="eb-input"
+            min="0.01"
+            step="0.01"
+            required
+          />
+        </FormField>
 
-        <div class="form-control">
-          <label class="label"><span class="label-text">Closing day</span></label>
-          <input v-model.number="form.closing_day" type="number" class="input input-bordered" min="1" max="31" required />
-        </div>
-        <div class="form-control">
-          <label class="label"><span class="label-text">Due day</span></label>
-          <input v-model.number="form.due_day" type="number" class="input input-bordered" min="1" max="31" required />
-        </div>
+        <FormField label="Current balance" for-id="card-balance">
+          <input
+            id="card-balance"
+            v-model.number="form.current_balance"
+            type="number"
+            class="eb-input"
+            min="0"
+            step="0.01"
+          />
+        </FormField>
+
+        <FormField label="Closing day" for-id="closing-day">
+          <input
+            id="closing-day"
+            v-model.number="form.closing_day"
+            type="number"
+            class="eb-input"
+            min="1"
+            max="31"
+            required
+          />
+        </FormField>
+
+        <FormField label="Due day" for-id="due-day">
+          <input
+            id="due-day"
+            v-model.number="form.due_day"
+            type="number"
+            class="eb-input"
+            min="1"
+            max="31"
+            required
+          />
+        </FormField>
       </div>
 
-      <p v-if="errorMessage" class="text-error text-sm">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="text-sm font-medium text-danger">{{ errorMessage }}</p>
 
-      <button type="submit" class="btn btn-primary w-fit" :disabled="submitting">
-        {{ submitting ? 'Saving...' : 'Save credit card' }}
-      </button>
+      <div class="flex items-center gap-3">
+        <button type="submit" class="eb-btn eb-btn-primary" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Saving…' : 'Save credit card' }}
+        </button>
+        <button type="button" class="eb-btn eb-btn-ghost" @click="showForm = false">Cancel</button>
+      </div>
     </form>
 
-    <div v-if="creditCardStore.loading" class="text-base-content/60">Loading credit cards...</div>
+    <div v-if="creditCardStore.loading" class="text-sm text-muted animate-pulse">Loading cards…</div>
 
-    <div v-else-if="creditCardStore.creditCards.length === 0" class="card bg-base-100 shadow-sm p-10 text-center text-base-content/60">
-      No credit cards found. Add your first one.
-    </div>
+    <EmptyState
+      v-else-if="creditCardStore.creditCards.length === 0"
+      title="No cards on file"
+      description="Add a credit card to track utilization."
+    >
+      <template #icon>💳</template>
+      <template #action>
+        <button class="eb-btn eb-btn-primary" @click="showForm = true">Add card</button>
+      </template>
+    </EmptyState>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div v-for="card in creditCardStore.creditCards" :key="card.id" class="card bg-base-100 shadow-sm">
-        <div class="card-body">
-          <div class="flex justify-between items-start">
-            <div>
-              <h2 class="card-title text-lg">{{ card.name }}</h2>
-              <p class="text-sm text-base-content/50">•••• {{ card.last_four_digits || '----' }}</p>
-            </div>
-            <div class="badge badge-outline">{{ utilization(card) }}% used</div>
+      <PaperCard
+        v-for="card in creditCardStore.creditCards"
+        :key="card.id"
+        class="p-5 animate-fade-up"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h3 class="font-display text-xl tracking-tight">{{ card.name }}</h3>
+            <p class="text-sm text-muted mt-0.5">•••• {{ card.last_four_digits || '----' }}</p>
           </div>
-          <div class="mt-4 space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-base-content/60">Limit</span>
-              <span class="font-semibold">{{ formatCurrency(card.limit) }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-base-content/60">Balance</span>
-              <span class="font-semibold">{{ formatCurrency(card.current_balance) }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-base-content/60">Closing day</span>
-              <span>{{ card.closing_day }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-base-content/60">Due day</span>
-              <span>{{ card.due_day }}</span>
-            </div>
+          <span class="chip" :class="getUtilizationTone(utilization(card))">
+            {{ utilization(card) }}% used
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-y-4 gap-x-6 mt-6 text-sm">
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide">Limit</p>
+            <p class="font-semibold tabular-nums mt-0.5">{{ formatCurrency(card.limit) }}</p>
           </div>
-          <div class="w-full bg-base-200 rounded-full h-2 mt-3">
-            <div class="bg-primary h-2 rounded-full transition-all" :style="{ width: utilization(card) + '%' }"></div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide">Balance</p>
+            <p class="font-semibold tabular-nums mt-0.5">{{ formatCurrency(card.current_balance) }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide">Closing day</p>
+            <p class="font-medium mt-0.5">{{ card.closing_day }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide">Due day</p>
+            <p class="font-medium mt-0.5">{{ card.due_day }}</p>
           </div>
         </div>
-      </div>
+
+        <div class="progress-track mt-5">
+          <div
+            class="progress-fill"
+            :class="getUtilizationBarTone(utilization(card))"
+            :style="{ width: utilization(card) + '%' }"
+          />
+        </div>
+      </PaperCard>
     </div>
   </div>
 </template>

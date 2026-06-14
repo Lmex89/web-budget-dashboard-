@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import Sidebar from '@/components/layout/Sidebar.vue'
-import Navbar from '@/components/layout/Navbar.vue'
+import MobileHeader from '@/components/layout/MobileHeader.vue'
+import BottomNav from '@/components/layout/BottomNav.vue'
 </script>
 
 <template>
-  <div class="drawer lg:drawer-open">
-    <input id="drawer" type="checkbox" class="drawer-toggle" />
-    <div class="drawer-content flex flex-col">
-      <Navbar />
-      <main class="flex-1 p-4 lg:p-6 bg-base-200 min-h-screen">
+  <div class="lg:flex min-h-screen bg-paper">
+    <Sidebar />
+
+    <div class="flex-1 min-w-0">
+      <MobileHeader />
+      <main class="p-5 lg:p-10 pb-28 lg:pb-10 max-w-6xl mx-auto">
         <router-view />
       </main>
     </div>
-    <Sidebar />
+
+    <BottomNav />
   </div>
 </template>

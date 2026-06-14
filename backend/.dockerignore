@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv
+venv/
+.env
+
+# Tests
+.pytest_cache/
+tests/
+
+# Docker
+Dockerfile
+.dockerignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

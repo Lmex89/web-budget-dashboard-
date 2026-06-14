@@ -1,27 +1,29 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { ExpenseListItem, MonthlySummary, CategoryDistribution } from '@/types'
+import { shallowRef } from 'vue'
+import type { ExpenseListItem, MonthlySummary, CategoryDistribution, CreateExpensePayload } from '@/types'
 import api from '@/services/api'
 
-export const useExpenseStore = defineStore('expenses', () => {
-  const expenses = ref<ExpenseListItem[]>([])
-  const monthlySummary = ref<MonthlySummary | null>(null)
-  const categoryDistribution = ref<CategoryDistribution[]>([])
+interface FetchExpensesParams {
+  page?: number
+  page_size?: number
+  category_id?: string
+  start_date?: string
+  end_date?: string
+}
 
-  async function fetchExpenses(params?: {
-    page?: number
-    page_size?: number
-    category_id?: string
-    start_date?: string
-    end_date?: string
-  }) {
+export const useExpenseStore = defineStore('expenses', () => {
+  const expenses = shallowRef<ExpenseListItem[]>([])
+  const monthlySummary = shallowRef<MonthlySummary | null>(null)
+  const categoryDistribution = shallowRef<CategoryDistribution[]>([])
+
+  async function fetchExpenses(params?: FetchExpensesParams) {
     const { data } = await api.get('/api/v1/expenses', { params })
     if (data.success) {
       expenses.value = data.data
     }
   }
 
-  async function createExpense(payload: any) {
+  async function createExpense(payload: CreateExpensePayload) {
     const { data } = await api.post('/api/v1/expenses', payload)
     return data
   }

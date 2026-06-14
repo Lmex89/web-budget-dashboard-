@@ -54,6 +54,22 @@ export interface CreditCard {
   updated_at: string
 }
 
+export interface CreateExpensePayload {
+  amount: number
+  description: string
+  date: string
+  payment_method: string
+  category_id: string
+  is_installment: boolean
+  total_installments: number | null
+}
+
+export interface CreateCategoryPayload {
+  name: string
+  color?: string | null
+  icon?: string | null
+}
+
 export interface CreditCardCreatePayload {
   name: string
   last_four_digits?: string | null
@@ -61,4 +77,44 @@ export interface CreditCardCreatePayload {
   closing_day: number
   due_day: number
   current_balance?: number
+}
+
+export interface CreateMemberPayload {
+  email: string
+  password: string
+  full_name: string
+}
+
+export interface RegisterPayload {
+  email: string
+  password: string
+  full_name: string
+  family_name: string
+}
+
+export interface Debt {
+  id: string
+  name: string
+  description: string | null
+  original_amount: string | number
+  remaining_amount: string | number
+  currency: string
+  type: 'we_owe' | 'owed_to_us' | 'family_loan'
+  status: 'active' | 'paid' | 'defaulted'
+  counterparty_name: string | null
+  family_id: string
+  created_by_user_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DebtCreatePayload {
+  name: string
+  description?: string | null
+  original_amount: number
+  remaining_amount?: number | null
+  currency?: string
+  type: 'we_owe' | 'owed_to_us' | 'family_loan'
+  status?: 'active' | 'paid' | 'defaulted'
+  counterparty_name?: string | null
 }

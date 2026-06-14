@@ -20,6 +20,7 @@ from app.api.v1.expenses import router as expenses_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.categories import router as categories_router
 from app.api.v1.credit_cards import router as credit_cards_router
+from app.api.v1.debts import router as debts_router
 
 
 @asynccontextmanager
@@ -60,6 +61,7 @@ def create_application() -> FastAPI:
     application.include_router(expenses_router, prefix="/api/v1")
     application.include_router(categories_router, prefix="/api/v1")
     application.include_router(credit_cards_router, prefix="/api/v1")
+    application.include_router(debts_router, prefix="/api/v1")
 
     @application.get("/health", tags=["Health"])
     async def health_check():
