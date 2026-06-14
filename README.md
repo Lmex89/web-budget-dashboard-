@@ -46,6 +46,27 @@ docker compose exec backend python -m migrations.run_migrations
 # http://localhost:8000/docs
 ```
 
+## First Time Setup
+
+```bash
+# 1. Create config from template (edit secrets if needed)
+cp .env.docker.example .env.docker
+
+# 2. Start all services
+docker compose up -d
+
+# 3. Run database migrations
+docker compose exec backend python -m migrations.run_migrations
+
+# 4. Seed default admin user (email: admin@family.com / password: admin123)
+docker compose exec backend python -m migrations.seed
+
+# 5. Open the app
+# http://localhost:5173
+```
+
+> To rebuild from scratch: `docker compose down -v && docker compose up -d --build && docker compose exec backend python -m migrations.run_migrations && docker compose exec backend python -m migrations.seed`
+
 ## Backend Architecture
 
 Follows Clean Architecture / Layered Architecture with Unit of Work pattern:
