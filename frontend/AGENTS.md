@@ -106,6 +106,14 @@ Use `src/utils/format.ts` for all data formatting:
 - **No comments in code** unless explicitly requested.
 - **Debt API shape**: Keep debt request/response fields aligned with backend schema names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) instead of introducing frontend-only aliases.
 
+## Reactivity and TypeScript conventions
+
+- **Prefer `shallowRef` over `ref`** for data that is replaced entirely (arrays, objects from API). Use `ref` only when deep reactivity is needed (e.g., form objects with v-model).
+- **Pinia stores**: Use `shallowRef` for lists and API response objects. Use `ref` for boolean flags like `loading`.
+- **Type everything**: Define interfaces in `src/types/index.ts` for all API payloads and responses. Avoid `any` types.
+- **Composables**: Extract reusable logic into `src/composables/`. The `useForm` composable handles form state, submission, and error handling.
+- **Debt API shape**: Keep debt request/response fields aligned with backend schema names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) instead of introducing frontend-only aliases.
+
 ## Available skills
 
 Skills under `.agents/skills/` are loaded on demand:
@@ -137,6 +145,8 @@ frontend/src/
 │   ├── creditCards.ts # Credit card list/create
 │   ├── debts.ts       # Debt list/create
 │   └── expenses.ts    # Expense CRUD + analytics
+├── composables/
+│   └── useForm.ts     # Reusable form state management
 ├── components/
 │   ├── layout/        # MainLayout, MobileHeader, BottomNav, Sidebar
 │   └── ui/            # PageHeader, PaperCard, MetricCard, EmptyState, FormField
@@ -164,3 +174,5 @@ frontend/src/
 6. Use `PageHeader`, `PaperCard`, `FormField`, and `EmptyState` components
 7. Use `format.ts` utilities for all currency/date display
 8. Provide mobile card list + desktop table pattern for data lists
+9. Use `useForm` composable for form state management
+10. Define TypeScript interfaces in `src/types/index.ts` for all API payloads

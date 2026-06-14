@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
 import PageHeader from '@/components/ui/PageHeader.vue'

@@ -1,4 +1,4 @@
-import { shallowRef, ref } from 'vue'
+import { ref, type Ref } from 'vue'
 
 interface UseFormOptions<T> {
   initialValues: T
@@ -6,10 +6,10 @@ interface UseFormOptions<T> {
 }
 
 interface UseFormReturn<T> {
-  form: ReturnType<typeof shallowRef<T>>
-  showForm: ReturnType<typeof ref<boolean>>
-  errorMessage: ReturnType<typeof ref<string>>
-  isSubmitting: ReturnType<typeof ref<boolean>>
+  form: Ref<T>
+  showForm: Ref<boolean>
+  errorMessage: Ref<string>
+  isSubmitting: Ref<boolean>
   handleSubmit: () => Promise<void>
   resetForm: () => void
   toggleForm: () => void
@@ -18,7 +18,7 @@ interface UseFormReturn<T> {
 export function useForm<T extends object>(options: UseFormOptions<T>): UseFormReturn<T> {
   const { initialValues, onSubmit } = options
 
-  const form = shallowRef<T>({ ...initialValues })
+  const form = ref({ ...initialValues }) as Ref<T>
   const showForm = ref(false)
   const errorMessage = ref('')
   const isSubmitting = ref(false)
