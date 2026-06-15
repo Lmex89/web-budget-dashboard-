@@ -19,6 +19,10 @@ const filterCategory = ref('')
 const filterStartDate = ref('')
 const filterEndDate = ref('')
 
+function openDatePicker(e: MouseEvent) {
+  ;(e.target as HTMLInputElement).showPicker()
+}
+
 interface ExpenseForm {
   amount: number
   description: string
@@ -119,11 +123,11 @@ async function handleDelete(id: string) {
         </div>
         <div class="flex flex-col gap-1">
           <label class="eb-label text-xs">From</label>
-          <input v-model="filterStartDate" type="date" class="eb-input w-40" />
+          <input v-model="filterStartDate" type="date" class="eb-input w-40" @click="openDatePicker" />
         </div>
         <div class="flex flex-col gap-1">
           <label class="eb-label text-xs">To</label>
-          <input v-model="filterEndDate" type="date" class="eb-input w-40" />
+          <input v-model="filterEndDate" type="date" class="eb-input w-40" @click="openDatePicker" />
         </div>
         <button
           v-if="hasActiveFilters"
@@ -155,7 +159,7 @@ async function handleDelete(id: string) {
         </FormField>
 
         <FormField label="Date" for-id="date">
-          <input id="date" v-model="form.date" type="date" class="eb-input" required />
+          <input id="date" v-model="form.date" type="date" class="eb-input" required @click="openDatePicker" />
         </FormField>
 
         <FormField label="Description" for-id="description" class="md:col-span-2">
