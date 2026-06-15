@@ -10,7 +10,7 @@ import BottomNav from '@/components/layout/BottomNav.vue'
 
     <div class="flex-1 min-w-0">
       <MobileHeader />
-      <main class="p-5 lg:p-10 pb-28 lg:pb-10 max-w-6xl mx-auto">
+      <main class="px-5 lg:px-10 pt-6 lg:pt-10 pb-28 lg:pb-10 max-w-6xl mx-auto">
         <router-view />
       </main>
     </div>

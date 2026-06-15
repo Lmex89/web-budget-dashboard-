@@ -35,9 +35,21 @@ class ExpenseRepository(ABC):
         pass
     
     @abstractmethod
-    async def get_family_monthly_summary(self, family_id: str, year: int, month: int) -> dict:
+    async def get_family_monthly_summary(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+        category_id: Optional[str] = None,
+    ) -> dict:
         pass
     
     @abstractmethod
-    async def get_category_distribution(self, family_id: str, year: int, month: int) -> List[dict]:
+    async def get_category_distribution(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+        category_id: Optional[str] = None,
+    ) -> List[dict]:
         pass

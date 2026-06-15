@@ -33,19 +33,19 @@ export const useExpenseStore = defineStore('expenses', () => {
     return data
   }
 
-  async function fetchMonthlySummary(year: number, month: number) {
-    const { data } = await api.get('/api/v1/expenses/analytics/monthly-summary', {
-      params: { year, month },
-    })
+  async function fetchMonthlySummary(year: number, month: number, category_id?: string) {
+    const params: Record<string, string | number> = { year, month }
+    if (category_id) params.category_id = category_id
+    const { data } = await api.get('/api/v1/expenses/analytics/monthly-summary', { params })
     if (data.success) {
       monthlySummary.value = data.data
     }
   }
 
-  async function fetchCategoryDistribution(year: number, month: number) {
-    const { data } = await api.get('/api/v1/expenses/analytics/category-distribution', {
-      params: { year, month },
-    })
+  async function fetchCategoryDistribution(year: number, month: number, category_id?: string) {
+    const params: Record<string, string | number> = { year, month }
+    if (category_id) params.category_id = category_id
+    const { data } = await api.get('/api/v1/expenses/analytics/category-distribution', { params })
     if (data.success) {
       categoryDistribution.value = data.data
     }

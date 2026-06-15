@@ -129,11 +129,12 @@ async def delete_expense(
 async def monthly_summary(
     year: int = Query(..., ge=2020, le=2100),
     month: int = Query(..., ge=1, le=12),
+    category_id: Optional[str] = Query(None),
     current_user: User = Depends(get_current_active_user),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
     logger.info(f"GET /expenses/analytics/monthly-summary - period={year}-{month:02d}")
-    summary = await service.monthly_summary(current_user.family_id, year, month)
+    summary = await service.monthly_summary(current_user.family_id, year, month, category_id)
     return BaseResponse(data=summary)
 
 
@@ -141,13 +142,16 @@ async def monthly_summary(
 async def category_distribution(
     year: int = Query(..., ge=2020, le=2100),
     month: int = Query(..., ge=1, le=12),
+    category_id: Optional[str] = Query(None),
     current_user: User = Depends(get_current_active_user),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
     logger.info(
         f"GET /expenses/analytics/category-distribution - period={year}-{month:02d}"
     )
-    distribution = await service.category_distribution(current_user.family_id, year, month)
+    distribution = await service.category_distribution(
+        current_user.family_id, year, month, category_id
+    )
     return BaseResponse(data=distribution)
 
 

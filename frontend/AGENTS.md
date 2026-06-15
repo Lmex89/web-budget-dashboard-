@@ -17,38 +17,43 @@ frontend-specific instructions only.
 
 - Vue 3 Composition API with `<script setup lang="ts">`
 - Vite 5 (build tool)
-- Tailwind CSS 3 + DaisyUI 4 (UI components — mostly legacy, custom design system preferred)
+- Tailwind CSS 3 (custom design system, no DaisyUI)
 - Pinia (state management)
 - Vue Router 4 (client-side routing, lazy-loaded routes)
 - Axios (HTTP client with 401 interceptor)
 
 ## Design system
 
-The app uses an **editorial/magazine** aesthetic with a mobile-first responsive layout.
+The app uses an **Apple/minimal** aesthetic with a mobile-first responsive layout. Supports automatic dark mode via `prefers-color-scheme`.
 
 ### Typography
 
-- **Display font**: `Bodoni Moda` (serif) — used for page titles, metric values, and section headings via `font-display` utility.
-- **Body font**: `Sora` (sans-serif) — used for UI text via `font-sans` (default).
-- Fonts are loaded from Google Fonts in `index.html`.
+- **Font**: System font stack (`-apple-system`, `SF Pro`, `Helvetica Neue`) used for both display and body text via `font-display` and `font-sans` utilities.
+- No external font loading — relies on OS-native system fonts.
+- Display text uses bold (700) weight with tight tracking; body text uses regular (400) weight.
 
 ### Color palette (CSS variables)
 
-All colors are defined as CSS custom properties in `src/style.css` and exposed as Tailwind color tokens in `tailwind.config.js`:
+All colors are defined as CSS custom properties in `src/style.css` with automatic dark mode support, and exposed as Tailwind color tokens in `tailwind.config.js`:
 
-| Token | Usage |
-|---|---|
-| `paper` / `paper-2` / `paper-dark` | Backgrounds (warm cream tones) |
-| `ink` / `muted` / `faint` | Text colors |
-| `rule` / `rule-strong` | Borders and dividers |
-| `accent` / `accent-light` / `accent-dark` | Primary accent (terracotta) |
-| `sage` / `sage-light` | Secondary accent (muted green) |
-| `warn` / `warn-light` | Warning state (amber) |
-| `danger` / `danger-light` | Error/destructive state |
+| Token | Light | Dark | Usage |
+|---|---|---|---|
+| `paper` | `#ffffff` | `#000000` | Primary background |
+| `paper-2` | `#fafafa` | `#1c1c1e` | Secondary surface |
+| `paper-dark` | `#f5f5f7` | `#2c2c2e` | Tertiary surface |
+| `ink` | `#1d1d1f` | `#f5f5f7` | Primary text |
+| `muted` | `#86868b` | `#98989d` | Secondary text |
+| `faint` | `#aeaeb2` | `#636366` | Placeholder/disabled |
+| `rule` | `#d2d2d7` | `#38383a` | Hairline borders |
+| `rule-strong` | `#c7c7cc` | `#48484a` | Strong borders |
+| `accent` | `#0071e3` | `#0a84ff` | Primary accent (blue) |
+| `sage` | `#34c759` | `#30d158` | Positive/success |
+| `warn` | `#ff9500` | `#ff9f0a` | Warning state |
+| `danger` | `#ff3b30` | `#ff453a` | Error/destructive |
 
 ### Custom component classes
 
-Use these instead of DaisyUI classes for new UI:
+Use these instead of DaisyUI classes for new UI (DaisyUI was removed):
 
 | Class | Purpose |
 |---|---|
@@ -62,11 +67,12 @@ Use these instead of DaisyUI classes for new UI:
 | `.page-title` / `.page-subtitle` / `.eyebrow` / `.section-title` | Typography |
 | `.animate-fade-up` / `.animate-fade-in` | Entry animations |
 | `.animation-delay-100` through `.animation-delay-500` | Staggered animation delays |
+| `.frosted` | Frosted glass effect via `backdrop-filter: blur(20px)` |
 
 ### Layout
 
 - **Mobile**: Sticky `MobileHeader` (top) + fixed `BottomNav` (6-tab bar). Main content has `pb-28` to clear the tab bar.
-- **Desktop (lg+)**: Editorial `Sidebar` (left, 72px wide) with numbered nav links. No bottom nav.
+- **Desktop (lg+)**: Editorial `Sidebar` (left, 72px wide) with dot nav links. No bottom nav.
 - `MainLayout.vue` composes `Sidebar`, `MobileHeader`, and `BottomNav`.
 
 ### Shared components
@@ -76,7 +82,7 @@ Located in `src/components/ui/`:
 | Component | Props | Purpose |
 |---|---|---|
 | `PageHeader` | `title`, `subtitle?`, `eyebrow?`, slot `action` | Page title block with optional action button |
-| `PaperCard` | `filled?` | Styled card wrapper |
+| `PaperCard` | `filled?` | Styled card wrapper (uses `isolate` not `overflow-hidden` to avoid clipping date pickers) |
 | `MetricCard` | `label`, `value`, `caption?`, `tone?` | Dashboard metric display |
 | `EmptyState` | `title`, `description?`, slots `icon`, `action` | Empty data placeholder |
 | `FormField` | `label`, `forId?`, `error?` | Label + slot for input |

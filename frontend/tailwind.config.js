@@ -26,11 +26,11 @@ export default {
         'danger-light': 'var(--danger-light)',
       },
       fontFamily: {
-        sans: ['Sora', 'system-ui', 'sans-serif'],
-        display: ['"Bodoni Moda"', 'Georgia', 'serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"Helvetica Neue"', 'sans-serif'],
+        display: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Helvetica Neue"', 'sans-serif'],
       },
       boxShadow: {
-        paper: 'var(--shadow-md)',
+        paper: 'var(--shadow-sm)',
         'paper-lg': 'var(--shadow-lg)',
       },
       borderRadius: {
@@ -38,12 +38,12 @@ export default {
         xl: 'var(--radius-md)',
       },
       animation: {
-        'fade-up': 'fadeUp 0.7s var(--ease-out-expo) both',
-        'fade-in': 'fadeIn 0.5s var(--ease-out-expo) both',
+        'fade-up': 'fadeUp 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both',
+        'fade-in': 'fadeIn 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) both',
       },
       keyframes: {
         fadeUp: {
-          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '0%': { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         fadeIn: {
@@ -53,8 +53,5 @@ export default {
       },
     },
   },
-  plugins: [require("daisyui")],
-  daisyui: {
-    themes: ["light"],
-  },
+  plugins: [],
 }

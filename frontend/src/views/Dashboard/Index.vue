@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useExpenseStore } from '@/stores/expenses'
+import { useCategoryStore } from '@/stores/categories'
 import { useAuthStore } from '@/stores/auth'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import MetricCard from '@/components/ui/MetricCard.vue'
@@ -9,25 +10,31 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import { formatCurrency, formatMonthName, formatShortDate } from '@/utils/format'
 
 const expenseStore = useExpenseStore()
+const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
 
 const currentMonth = ref(new Date().getMonth() + 1)
 const currentYear = ref(new Date().getFullYear())
+const selectedCategory = ref('')
 
 const monthLabel = computed(
   () => `${formatMonthName(currentMonth.value)} ${currentYear.value}`
 )
 
 async function loadData() {
+  const categoryId = selectedCategory.value || undefined
   await Promise.all([
-    expenseStore.fetchMonthlySummary(currentYear.value, currentMonth.value),
-    expenseStore.fetchCategoryDistribution(currentYear.value, currentMonth.value),
+    expenseStore.fetchMonthlySummary(currentYear.value, currentMonth.value, categoryId),
+    expenseStore.fetchCategoryDistribution(currentYear.value, currentMonth.value, categoryId),
     expenseStore.fetchExpenses({ page_size: 5 }),
   ])
 }
 
-onMounted(loadData)
-watch([currentMonth, currentYear], loadData)
+onMounted(() => {
+  categoryStore.fetchCategories()
+  loadData()
+})
+watch([currentMonth, currentYear, selectedCategory], loadData)
 </script>
 
 <template>
@@ -39,6 +46,16 @@ watch([currentMonth, currentYear], loadData)
     >
       <template #action>
         <div class="flex items-center gap-2">
+          <select v-model="selectedCategory" class="eb-select w-40">
+            <option value="">All categories</option>
+            <option
+              v-for="cat in categoryStore.categories"
+              :key="cat.id"
+              :value="cat.id"
+            >
+              {{ cat.name }}
+            </option>
+          </select>
           <select v-model="currentMonth" class="eb-select w-28">
             <option v-for="m in 12" :key="m" :value="m">
               {{ formatMonthName(m) }}

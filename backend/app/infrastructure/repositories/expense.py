@@ -130,19 +130,26 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             logger.exception(f"Database error deleting expense {expense_id}")
             raise AppException("ERR_DATABASE", "Failed to delete expense.")
 
-    async def get_family_monthly_summary(self, family_id: str, year: int, month: int) -> dict:
+    async def get_family_monthly_summary(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+        category_id: Optional[str] = None,
+    ) -> dict:
         logger.debug(f"Aggregating monthly summary: family={family_id}, {year}-{month:02d}")
         from sqlalchemy import extract
         try:
+            conditions = [
+                Expense.family_id == family_id,
+                extract("year", Expense.date) == year,
+                extract("month", Expense.date) == month,
+            ]
+            if category_id:
+                conditions.append(Expense.category_id == category_id)
             stmt = select(
                 func.coalesce(func.sum(Expense.amount), 0).label("total")
-            ).where(
-                and_(
-                    Expense.family_id == family_id,
-                    extract("year", Expense.date) == year,
-                    extract("month", Expense.date) == month,
-                )
-            )
+            ).where(and_(*conditions))
             result = await self.db.execute(stmt)
             total = result.scalar()
             logger.debug(f"Monthly total for {year}-{month:02d}: {total}")
@@ -151,10 +158,23 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             logger.exception("Database error aggregating monthly summary")
             raise AppException("ERR_DATABASE", "Failed to compute monthly summary.")
 
-    async def get_category_distribution(self, family_id: str, year: int, month: int) -> List[dict]:
+    async def get_category_distribution(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+        category_id: Optional[str] = None,
+    ) -> List[dict]:
         logger.debug(f"Aggregating category distribution: family={family_id}, {year}-{month:02d}")
         from sqlalchemy import extract
         try:
+            conditions = [
+                Expense.family_id == family_id,
+                extract("year", Expense.date) == year,
+                extract("month", Expense.date) == month,
+            ]
+            if category_id:
+                conditions.append(Expense.category_id == category_id)
             stmt = (
                 select(
                     Category.name,
@@ -162,13 +182,7 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
                     func.coalesce(func.sum(Expense.amount), 0).label("total"),
                 )
                 .join(Expense, Expense.category_id == Category.id)
-                .where(
-                    and_(
-                        Expense.family_id == family_id,
-                        extract("year", Expense.date) == year,
-                        extract("month", Expense.date) == month,
-                    )
-                )
+                .where(and_(*conditions))
                 .group_by(Category.id)
                 .order_by(desc("total"))
             )

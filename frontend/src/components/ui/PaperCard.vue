@@ -5,7 +5,7 @@ defineProps<{
 </script>
 
 <template>
-  <div :class="[filled ? 'paper-card-filled' : 'paper-card', 'overflow-hidden']">
+  <div :class="filled ? 'paper-card-filled' : 'paper-card'">
     <slot />
   </div>
 </template>

@@ -18,7 +18,7 @@ interface CategoryForm {
 
 const initialForm: CategoryForm = {
   name: '',
-  color: '#b85c3f',
+  color: '#0071e3',
   icon: '',
 }
 

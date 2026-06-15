@@ -45,7 +45,7 @@ const nav = [
 
 <template>
   <nav
-    class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-paper/95 backdrop-blur border-t border-rule pb-safe"
+    class="lg:hidden fixed bottom-0 inset-x-0 z-40 frosted bg-paper/80 border-t border-rule pb-safe"
   >
     <div class="grid grid-cols-6 h-16">
       <router-link
@@ -53,9 +53,9 @@ const nav = [
         :key="item.path"
         :to="item.path"
         :aria-label="item.name"
-        class="bottom-nav-link"
+        class="bottom-nav-link pt-1"
         :class="{ active: route.path === item.path }"
-        v-html="item.icon + '<span class=\'hidden sm:inline\'>' + item.short + '</span>'"
+        v-html="item.icon + '<span>' + item.short + '</span>'"
       />
     </div>
   </nav>

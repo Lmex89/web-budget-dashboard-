@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
 import { useCreditCardStore } from '@/stores/creditCards'
@@ -14,6 +14,10 @@ import type { CreateExpensePayload } from '@/types'
 const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
 const creditCardStore = useCreditCardStore()
+
+const filterCategory = ref('')
+const filterStartDate = ref('')
+const filterEndDate = ref('')
 
 interface ExpenseForm {
   amount: number
@@ -46,21 +50,44 @@ const { form, showForm, toggleForm, handleSubmit, errorMessage } = useForm<Expen
       date: new Date(values.date).toISOString(),
     }
     await expenseStore.createExpense(payload)
-    await expenseStore.fetchExpenses()
+    await fetchExpenses()
   },
 })
 
 const showCreditCardField = computed(() => form.value.payment_method === 'credit')
 
+const hasActiveFilters = computed(
+  () => filterCategory.value || filterStartDate.value || filterEndDate.value
+)
+
+async function fetchExpenses() {
+  await expenseStore.fetchExpenses({
+    category_id: filterCategory.value || undefined,
+    start_date: filterStartDate.value || undefined,
+    end_date: filterEndDate.value || undefined,
+  })
+}
+
+function clearFilters() {
+  filterCategory.value = ''
+  filterStartDate.value = ''
+  filterEndDate.value = ''
+  fetchExpenses()
+}
+
+watch([filterCategory, filterStartDate, filterEndDate], () => {
+  fetchExpenses()
+})
+
 onMounted(() => {
-  expenseStore.fetchExpenses()
+  fetchExpenses()
   categoryStore.fetchCategories()
   creditCardStore.fetchCreditCards()
 })
 
 async function handleDelete(id: string) {
   await expenseStore.deleteExpense(id)
-  expenseStore.fetchExpenses()
+  fetchExpenses()
 }
 </script>
 
@@ -73,6 +100,40 @@ async function handleDelete(id: string) {
         </button>
       </template>
     </PageHeader>
+
+    <!-- Filter bar -->
+    <PaperCard class="p-4">
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="eb-label text-xs">Category</label>
+          <select v-model="filterCategory" class="eb-select w-40">
+            <option value="">All categories</option>
+            <option
+              v-for="cat in categoryStore.categories"
+              :key="cat.id"
+              :value="cat.id"
+            >
+              {{ cat.name }}
+            </option>
+          </select>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="eb-label text-xs">From</label>
+          <input v-model="filterStartDate" type="date" class="eb-input w-40" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="eb-label text-xs">To</label>
+          <input v-model="filterEndDate" type="date" class="eb-input w-40" />
+        </div>
+        <button
+          v-if="hasActiveFilters"
+          class="eb-btn eb-btn-ghost text-sm"
+          @click="clearFilters"
+        >
+          Clear
+        </button>
+      </div>
+    </PaperCard>
 
     <form
       v-if="showForm"

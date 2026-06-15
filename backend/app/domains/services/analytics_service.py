@@ -4,7 +4,7 @@ SRP: Single responsibility for aggregating and computing analytics data.
      Queries via IUnitOfWork repository abstractions.
 OCP: Open for extension with new analytics methods without modifying existing ones.
 """
-from typing import List
+from typing import List, Optional
 
 from loguru import logger
 
@@ -17,19 +17,35 @@ class AnalyticsService:
     def __init__(self, uow: IUnitOfWork) -> None:
         self.uow = uow
 
-    async def monthly_summary(self, family_id: str, year: int, month: int) -> dict:
+    async def monthly_summary(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+        category_id: Optional[str] = None,
+    ) -> dict:
         """Total expenses for a given family in a specific month/year."""
         logger.debug(f"Monthly summary: family={family_id}, period={year}-{month:02d}")
         async with self.uow:
-            result = await self.uow.expenses.get_family_monthly_summary(family_id, year, month)
+            result = await self.uow.expenses.get_family_monthly_summary(
+                family_id, year, month, category_id
+            )
             logger.info(f"Monthly summary for {year}-{month:02d}: total={result['total_expenses']}")
             return result
 
-    async def category_distribution(self, family_id: str, year: int, month: int) -> List[dict]:
+    async def category_distribution(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+        category_id: Optional[str] = None,
+    ) -> List[dict]:
         """Expenses grouped by category for a given month/year."""
         logger.debug(f"Category distribution: family={family_id}, period={year}-{month:02d}")
         async with self.uow:
-            result = await self.uow.expenses.get_category_distribution(family_id, year, month)
+            result = await self.uow.expenses.get_category_distribution(
+                family_id, year, month, category_id
+            )
             logger.debug(f"Category distribution has {len(result)} entries")
             return result
 

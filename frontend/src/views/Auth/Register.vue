@@ -40,17 +40,14 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center px-5 py-12 bg-paper relative overflow-hidden">
-    <div class="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-accent/5 blur-3xl" />
-    <div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-sage/5 blur-3xl" />
-
-    <div class="w-full max-w-md z-10 animate-fade-up">
-      <div class="text-center mb-8">
-        <div class="w-16 h-16 rounded-2xl bg-ink text-paper flex items-center justify-center font-display text-2xl mx-auto mb-5 shadow-paper">
+  <div class="min-h-screen flex items-center justify-center px-5 py-12 bg-paper">
+    <div class="w-full max-w-md animate-fade-up">
+      <div class="text-center mb-10">
+        <div class="w-14 h-14 mx-auto mb-6 rounded-2xl bg-accent text-white flex items-center justify-center font-display text-xl font-semibold shadow-paper">
           FB
         </div>
-        <h1 class="font-display text-4xl tracking-tight">Create account</h1>
-        <p class="text-sm text-muted mt-2">Join or create a family budget</p>
+        <h1 class="font-display text-[2rem] font-bold tracking-tight text-ink">Create account</h1>
+        <p class="text-sm text-muted mt-1.5">Join or create a family budget</p>
       </div>
 
       <PaperCard class="p-6 md:p-8">
@@ -79,9 +76,9 @@ async function handleSubmit() {
         </form>
       </PaperCard>
 
-      <p class="text-center text-sm text-muted mt-6">
+      <p class="text-center text-sm text-muted mt-8">
         Already have one?
-        <router-link to="/login" class="font-semibold text-ink underline decoration-accent underline-offset-4 hover:text-accent">
+        <router-link to="/login" class="font-semibold text-accent hover:underline">
           Sign in
         </router-link>
       </p>
