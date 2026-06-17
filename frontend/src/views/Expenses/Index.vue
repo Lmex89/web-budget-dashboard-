@@ -106,7 +106,7 @@ async function handleDelete(id: string) {
     </PageHeader>
 
     <!-- Filter bar -->
-    <PaperCard class="p-4">
+    <PaperCard class="p-4" :class="showForm ? 'hidden md:block' : ''">
       <div class="flex flex-wrap items-end gap-3">
         <div class="flex flex-col gap-1">
           <label class="eb-label text-xs">Category</label>
