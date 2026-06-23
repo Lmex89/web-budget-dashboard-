@@ -52,10 +52,13 @@ backend/app/
 | `app/core/exceptions.py` | All exception classes + global handlers |
 | `app/db/session.py` | Engine, sessionmaker, `get_db` |
 | `app/dependencies/services.py` | Service DI factory functions |
+| `app/domains/services/expense_service.py` | Expense CRUD + CSV export (`list_by_family_csv`) |
 | `app/domains/services/category_service.py` | Category business logic (list/create/update) |
 | `app/domains/services/debt_service.py` | Debt business logic (list/create) |
+| `app/api/v1/expenses.py` | Good vertical slice example (CRUD, analytics, CSV export) |
 | `app/api/v1/debts.py` | Debt API endpoints (list/create) |
 | `app/api/v1/categories.py` | Category API endpoints (list/create/update) |
+| `app/domains/repositories/expense.py` | Expense repository interface (includes `get_by_family_csv`) |
+| `app/infrastructure/repositories/expense.py` | SQLAlchemy expense repository implementation |
 | `app/models/__init__.py` | All ORM models |
-| `app/api/v1/expenses.py` | Good vertical slice example |
 | `migrations/sql/` | Numbered raw SQL files |

@@ -155,18 +155,13 @@ frontend/src/
 ├── App.vue            # Root component
 ├── router/index.ts    # Routes + guard + meta.title
 ├── services/
-│   ├── api.ts              # Axios instance + interceptors
-│   ├── categories.service.ts  # Dashboard category mock service
-│   └── expenses.service.ts    # Dashboard expense mock service
+│   └── api.ts              # Axios instance + interceptors
 ├── stores/
 │   ├── auth.ts        # Auth state (login, logout, fetchCurrentUser)
-│   ├── auth.ts               # Auth state (login, logout, fetchCurrentUser)
-│   ├── categories.ts         # Category list/create/update
-│   ├── categories.store.ts   # Dashboard category list (mock data)
-│   ├── creditCards.ts        # Credit card list/create
-│   ├── debts.ts              # Debt list/create
-│   ├── expenses.ts           # Expense CRUD + analytics
-│   └── expenses.store.ts     # Dashboard expense store (mock data)
+│   ├── categories.ts  # Category list/create/update
+│   ├── creditCards.ts # Credit card list/create
+│   ├── debts.ts       # Debt list/create
+│   └── expenses.ts    # Expense CRUD + analytics
 ├── composables/
 │   ├── useCurrency.ts  # Intl.NumberFormat currency formatter
 │   └── useForm.ts      # Reusable form state management
@@ -182,7 +177,7 @@ frontend/src/
 │   ├── CreditCards/
 │   ├── Debts/
 │   ├── Settings/
-│   └── DashboardView.vue  # Mobile-first overview (uses dashboard stores)
+│       └── DashboardView.vue  # Mobile-first overview (uses real expense + category stores)
 ├── utils/
 │   └── format.ts      # Currency, date, month formatting
 ├── types/index.ts     # Shared TS interfaces

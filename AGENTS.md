@@ -43,7 +43,8 @@ Follow Clean Architecture boundaries described in [README.md](README.md):
 
 Rules:
 
-- Keep route handlers thin. Put business logic in service classes.
+- Keep route handlers thin. Put business logic in service classes (CSV export route at `expenses.py:130` is an exception — it builds the CSV inline since no complex logic is involved).
+- For non-paginated queries (e.g., CSV export), add `get_by_family_csv` methods to the repository interface and implementation to avoid abusing pagination params.
 - Add repository interfaces in `domains/repositories` and concrete SQLAlchemy implementations in `infrastructure/repositories`.
 - Use dependency injection with FastAPI `Depends` (examples in [backend/app/dependencies](backend/app/dependencies)).
 - Prefer raising typed app exceptions from [backend/app/core/exceptions.py](backend/app/core/exceptions.py) instead of returning ad-hoc error payloads.
@@ -57,7 +58,7 @@ Each domain concern gets its own focused service class:
 | `CategoryService` | Family-scoped category list, create, and update |
 | `CreditCardService` | Family-scoped credit card list and create |
 | `DebtService` | Family-scoped debt list and create |
-| `ExpenseService` | CRUD for expenses, validation, family-scoping |
+| `ExpenseService` | CRUD for expenses, validation, family-scoping, CSV export |
 | `InstallmentService` | Installment generation, overdue detection, status tracking |
 | `AnalyticsService` | Monthly summaries, category distributions, trends, card utilization |
 
