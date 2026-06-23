@@ -24,6 +24,11 @@ export default {
         'warn-light': 'var(--warn-light)',
         danger: 'var(--danger)',
         'danger-light': 'var(--danger-light)',
+        'cat-1': 'var(--cat-1)',
+        'cat-2': 'var(--cat-2)',
+        'cat-3': 'var(--cat-3)',
+        'cat-4': 'var(--cat-4)',
+        'cat-5': 'var(--cat-5)',
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"Helvetica Neue"', 'sans-serif'],

@@ -25,7 +25,7 @@ backend/app/
 ├── schemas/            # Pydantic DTOs
 ├── domains/
 │   ├── repositories/   # Abstract interfaces + IUnitOfWork
-│   └── services/       # Business logic (ExpenseService, InstallmentService, ...)
+│   └── services/       # Business logic (ExpenseService, CategoryService, ...)
 ├── infrastructure/
 │   └── repositories/   # SQLAlchemy implementations
 ├── models/             # ORM entities (__init__.py)
@@ -52,8 +52,10 @@ backend/app/
 | `app/core/exceptions.py` | All exception classes + global handlers |
 | `app/db/session.py` | Engine, sessionmaker, `get_db` |
 | `app/dependencies/services.py` | Service DI factory functions |
+| `app/domains/services/category_service.py` | Category business logic (list/create/update) |
 | `app/domains/services/debt_service.py` | Debt business logic (list/create) |
 | `app/api/v1/debts.py` | Debt API endpoints (list/create) |
+| `app/api/v1/categories.py` | Category API endpoints (list/create/update) |
 | `app/models/__init__.py` | All ORM models |
 | `app/api/v1/expenses.py` | Good vertical slice example |
 | `migrations/sql/` | Numbered raw SQL files |

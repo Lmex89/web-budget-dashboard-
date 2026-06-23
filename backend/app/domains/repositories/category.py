@@ -20,3 +20,7 @@ class CategoryRepository(ABC):
     @abstractmethod
     async def create(self, category: Category) -> Category:
         pass
+
+    @abstractmethod
+    async def update(self, category: Category) -> Category:
+        pass

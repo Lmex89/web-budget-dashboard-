@@ -10,6 +10,10 @@ class CategoryCreate(BaseModel):
     icon: Optional[str] = Field(default=None, max_length=50)
 
 
+class CategoryUpdate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+
+
 class CategoryResponse(BaseModel):
     id: str
     name: str

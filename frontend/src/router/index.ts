@@ -24,7 +24,7 @@ const router = createRouter({
         {
           path: '',
           name: 'Dashboard',
-          component: () => import('@/views/Dashboard/Index.vue'),
+          component: () => import('@/views/DashboardView.vue'),
           meta: { title: 'Overview' },
         },
         {

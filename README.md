@@ -5,8 +5,17 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 ## Tech Stack
 
 - **Backend:** Python 3.13+, FastAPI, SQLAlchemy 2.0, MariaDB 10.11+
-- **Frontend:** Vue.js 3, Vite, Tailwind CSS, DaisyUI, Pinia
+- **Frontend:** Vue.js 3, Vite, Tailwind CSS, Pinia, Vue Router 4
 - **Infra:** Docker, Docker Compose
+
+## Features
+
+- **Dashboard Overview** — Mobile-first responsive dashboard with expense summary, category breakdown (stacked bar), recent expenses, and top categories.
+- **Expense Management** — Create, read, update, and delete expenses with installment support.
+- **Categories** — Organize spending with custom categories; edit category names inline.
+- **Credit Cards** — Track card limits, closing days, and balances.
+- **Debts** — Manage family loans and IOUs with counterparty tracking.
+- **Family Sharing** — Multi-user families with JWT-based authentication (30-day token expiry).
 
 ## Project Structure
 
@@ -15,7 +24,7 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 ├── backend/            # FastAPI Clean Architecture backend
 │   ├── app/            # Application code
 │   ├── migrations/     # Raw SQL migrations
-│   └── tests/          # Test suite (currently empty)
+│   └── tests/          # Test suite
 ├── frontend/           # Vue 3 SPA frontend
 ├── docker-compose.yml  # Local development orchestration
 └── docs/               # Placeholder for future ADRs / documentation
@@ -114,6 +123,23 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## Git Commit Conventions
+
+This project follows **Conventional Commits**:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
+- **Scope:** area of codebase (`dashboard`, `categories`, `auth`, `backend`, `frontend`)
+- **Description:** imperative mood, lowercase, no trailing period
+- **Example:** `feat(categories): add inline name editing from categories route`
 
 ## License
 

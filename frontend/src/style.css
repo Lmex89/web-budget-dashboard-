@@ -22,6 +22,17 @@
     --danger: #ff3b30;
     --danger-light: #ffeeed;
 
+    --cat-1: #f97316;
+    --cat-1-light: #fef2e8;
+    --cat-2: #3b82f6;
+    --cat-2-light: #e8f0fe;
+    --cat-3: #22c55e;
+    --cat-3-light: #e8f8ed;
+    --cat-4: #a855f7;
+    --cat-4-light: #f3e8fa;
+    --cat-5: #ec4899;
+    --cat-5-light: #fce7f3;
+
     --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
 
@@ -55,6 +66,17 @@
       --warn-light: #3a2e1a;
       --danger: #ff453a;
       --danger-light: #3a1a1a;
+
+      --cat-1: #fb923c;
+      --cat-1-light: #3a2018;
+      --cat-2: #60a5fa;
+      --cat-2-light: #1a2e3a;
+      --cat-3: #4ade80;
+      --cat-3-light: #1a3a2a;
+      --cat-4: #c084fc;
+      --cat-4-light: #2e1a3a;
+      --cat-5: #f472b6;
+      --cat-5-light: #3a1a28;
 
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
       --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);

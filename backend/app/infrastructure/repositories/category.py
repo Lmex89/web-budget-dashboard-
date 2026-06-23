@@ -67,3 +67,14 @@ class SQLAlchemyCategoryRepository(CategoryRepository):
         except SQLAlchemyError:
             logger.exception("Database error creating category")
             raise AppException("ERR_DATABASE", "Failed to create category.")
+
+    async def update(self, category: Category) -> Category:
+        logger.info(f"Updating category: id={category.id}, name={category.name}")
+        try:
+            self.db.add(category)
+            await self.db.flush()
+            await self.db.refresh(category)
+            return category
+        except SQLAlchemyError:
+            logger.exception(f"Database error updating category {category.id}")
+            raise AppException("ERR_DATABASE", "Failed to update category.")

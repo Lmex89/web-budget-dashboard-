@@ -54,7 +54,7 @@ Each domain concern gets its own focused service class:
 
 | Service | Responsibility |
 |---|---|
-| `CategoryService` | Family-scoped category list and create |
+| `CategoryService` | Family-scoped category list, create, and update |
 | `CreditCardService` | Family-scoped credit card list and create |
 | `DebtService` | Family-scoped debt list and create |
 | `ExpenseService` | CRUD for expenses, validation, family-scoping |
@@ -95,6 +95,24 @@ Service rules:
 - Money values use Decimal/Numeric in domain and schema models (see [backend/app/models/__init__.py](backend/app/models/__init__.py) and [backend/app/schemas/expense.py](backend/app/schemas/expense.py)); avoid introducing float math in business logic.
 - Custom exception classes are organized by domain in [backend/app/core/exceptions.py](backend/app/core/exceptions.py).
 - Debt API/frontend payloads should preserve backend field names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) to avoid adapter drift in `frontend/src/stores/debts.ts` and debt views.
+- Category names can be edited inline from the Categories route; the backend enforces family ownership and name uniqueness on update.
+
+## Git commit conventions
+
+Follow **Conventional Commits** for all commits:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
+- **Scope:** area of codebase (`dashboard`, `categories`, `auth`, `backend`, `frontend`)
+- **Description:** imperative mood, lowercase, no trailing period
+- **Example:** `feat(categories): add inline name editing from categories route`
 
 ## Docker optimization
 
@@ -122,6 +140,9 @@ Service rules:
 - Frontend prod Docker: [frontend/Dockerfile.prod](frontend/Dockerfile.prod) + [frontend/nginx.conf](frontend/nginx.conf)
 - Expense API flow (good vertical slice): [backend/app/api/v1/expenses.py](backend/app/api/v1/expenses.py)
 - Debt API flow (list/create): [backend/app/api/v1/debts.py](backend/app/api/v1/debts.py)
+- Category API flow (list/create/update): [backend/app/api/v1/categories.py](backend/app/api/v1/categories.py)
 - Service layer entry point: [backend/app/dependencies/services.py](backend/app/dependencies/services.py)
 - Domain models (all entities): [backend/app/models/\_\_init\_\_.py](backend/app/models/__init__.py)
 - Exception hierarchy: [backend/app/core/exceptions.py](backend/app/core/exceptions.py)
+- Dashboard view: [frontend/src/views/DashboardView.vue](frontend/src/views/DashboardView.vue)
+- Dashboard components: [frontend/src/components/dashboard/](frontend/src/components/dashboard/)

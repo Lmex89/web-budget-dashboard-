@@ -72,6 +72,10 @@ export interface CreateCategoryPayload {
   icon?: string | null
 }
 
+export interface UpdateCategoryPayload {
+  name: string
+}
+
 export interface CreditCardCreatePayload {
   name: string
   last_four_digits?: string | null
@@ -119,4 +123,42 @@ export interface DebtCreatePayload {
   type: 'we_owe' | 'owed_to_us' | 'family_loan'
   status?: 'active' | 'paid' | 'defaulted'
   counterparty_name?: string | null
+}
+
+export interface DashboardExpense {
+  id: string
+  description: string
+  amount: number
+  date: string
+  categoryId: string
+  authorName: string
+}
+
+export interface DashboardCategory {
+  id: string
+  name: string
+  colorIndex: 1 | 2 | 3 | 4 | 5
+}
+
+export interface DashboardSummary {
+  totalExpenses: number
+  categoriesUsedCount: number
+  familyMembersCount: number
+  month: number
+  year: number
+}
+
+export interface CategoryBarSegment {
+  categoryId: string
+  categoryName: string
+  amount: number
+  percentage: number
+  colorIndex: 1 | 2 | 3 | 4 | 5
+}
+
+export interface StatCardData {
+  label: string
+  value: string
+  caption: string
+  tone: 'ink' | 'accent' | 'sage'
 }

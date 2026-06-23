@@ -72,7 +72,7 @@ Use these instead of DaisyUI classes for new UI (DaisyUI was removed):
 ### Layout
 
 - **Mobile**: Sticky `MobileHeader` (top) + fixed `BottomNav` (6-tab bar). Main content has `pb-28` to clear the tab bar.
-- **Desktop (lg+)**: Editorial `Sidebar` (left, 72px wide) with dot nav links. No bottom nav.
+- **Desktop (lg+)**: Editorial `Sidebar` (left, 220px wide) with dot nav links. No bottom nav.
 - `MainLayout.vue` composes `Sidebar`, `MobileHeader`, and `BottomNav`.
 
 ### Shared components
@@ -84,6 +84,10 @@ Located in `src/components/ui/`:
 | `PageHeader` | `title`, `subtitle?`, `eyebrow?`, slot `action` | Page title block with optional action button |
 | `PaperCard` | `filled?` | Styled card wrapper (uses `isolate` not `overflow-hidden` to avoid clipping date pickers) |
 | `MetricCard` | `label`, `value`, `caption?`, `tone?` | Dashboard metric display |
+| `StatCard` | `label`, `value`, `caption`, `tone?` | Mobile-first stat row/card |
+| `CategoryStackedBar` | `segments`, `total-label`, `loading`, `error` | Horizontal stacked bar with legend |
+| `RecentExpensesCard` | `expenses`, `loading`, `error` | Expense list card |
+| `TopCategoriesCard` | `categories`, `loading`, `error` | Top categories list card |
 | `EmptyState` | `title`, `description?`, slots `icon`, `action` | Empty data placeholder |
 | `FormField` | `label`, `forId?`, `error?` | Label + slot for input |
 
@@ -95,6 +99,11 @@ Use `src/utils/format.ts` for all data formatting:
 - `formatDate(value)` — `Jan 15, 2026`
 - `formatShortDate(value)` — `Jan 15`
 - `formatMonthName(monthIndex)` — `January`
+
+Composables in `src/composables/`:
+
+- `useCurrency()` — returns `formatCurrency` via `Intl.NumberFormat`
+- `useForm()` — form state, submission, and error handling
 
 ### Mobile-first patterns
 
@@ -125,7 +134,8 @@ Use `src/utils/format.ts` for all data formatting:
 Skills under `.agents/skills/` are loaded on demand:
 
 | Skill | When to use |
-|---|---|
+|---|---|---|
+| `vue-budget-dashboard` | Building budget/finance dashboard features, UI proposals for finance domain, scaffolding or theming Vue budget apps |
 | `vue-best-practices` | Any `.vue` file work |
 | `vue-debug-guides` | Debugging runtime errors, reactivity, SSR issues |
 | `vue-pinia-best-practices` | Pinia store creation or modification |
@@ -144,26 +154,35 @@ frontend/src/
 ├── main.ts            # App entry
 ├── App.vue            # Root component
 ├── router/index.ts    # Routes + guard + meta.title
-├── services/api.ts    # Axios instance + interceptors
+├── services/
+│   ├── api.ts              # Axios instance + interceptors
+│   ├── categories.service.ts  # Dashboard category mock service
+│   └── expenses.service.ts    # Dashboard expense mock service
 ├── stores/
 │   ├── auth.ts        # Auth state (login, logout, fetchCurrentUser)
-│   ├── categories.ts  # Category list/create
-│   ├── creditCards.ts # Credit card list/create
-│   ├── debts.ts       # Debt list/create
-│   └── expenses.ts    # Expense CRUD + analytics
+│   ├── auth.ts               # Auth state (login, logout, fetchCurrentUser)
+│   ├── categories.ts         # Category list/create/update
+│   ├── categories.store.ts   # Dashboard category list (mock data)
+│   ├── creditCards.ts        # Credit card list/create
+│   ├── debts.ts              # Debt list/create
+│   ├── expenses.ts           # Expense CRUD + analytics
+│   └── expenses.store.ts     # Dashboard expense store (mock data)
 ├── composables/
-│   └── useForm.ts     # Reusable form state management
+│   ├── useCurrency.ts  # Intl.NumberFormat currency formatter
+│   └── useForm.ts      # Reusable form state management
 ├── components/
+│   ├── dashboard/     # StatCard, CategoryStackedBar, RecentExpensesCard, TopCategoriesCard
 │   ├── layout/        # MainLayout, MobileHeader, BottomNav, Sidebar
 │   └── ui/            # PageHeader, PaperCard, MetricCard, EmptyState, FormField
 ├── views/
 │   ├── Auth/          # Login, Register
-│   ├── Dashboard/
+│   ├── Dashboard/     # Legacy dashboard (superseded by DashboardView.vue)
 │   ├── Expenses/
-│   ├── Categories/
+│   ├── Categories/    # Category list with inline name editing
 │   ├── CreditCards/
 │   ├── Debts/
-│   └── Settings/
+│   ├── Settings/
+│   └── DashboardView.vue  # Mobile-first overview (uses dashboard stores)
 ├── utils/
 │   └── format.ts      # Currency, date, month formatting
 ├── types/index.ts     # Shared TS interfaces

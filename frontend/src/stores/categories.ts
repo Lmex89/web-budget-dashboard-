@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { shallowRef, ref } from 'vue'
-import type { Category, CreateCategoryPayload } from '@/types'
+import type { Category, CreateCategoryPayload, UpdateCategoryPayload } from '@/types'
 import api from '@/services/api'
 
 export const useCategoryStore = defineStore('categories', () => {
@@ -27,10 +27,21 @@ export const useCategoryStore = defineStore('categories', () => {
     return data
   }
 
+  async function updateCategory(categoryId: string, payload: UpdateCategoryPayload) {
+    const { data } = await api.put(`/api/v1/categories/${categoryId}`, payload)
+    if (data.success) {
+      categories.value = categories.value.map((c) =>
+        c.id === categoryId ? { ...c, name: data.data.name } : c
+      )
+    }
+    return data
+  }
+
   return {
     categories,
     loading,
     fetchCategories,
     createCategory,
+    updateCategory,
   }
 })

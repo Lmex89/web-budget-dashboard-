@@ -17,19 +17,19 @@ const navigation = [
 </script>
 
 <template>
-  <aside class="hidden lg:flex flex-col w-72 h-screen sticky top-0 border-r border-rule bg-paper/95 frosted">
-    <div class="px-8 pt-10 pb-8">
+  <aside class="hidden lg:flex flex-col w-[220px] h-screen sticky top-0 border-r border-rule bg-paper/95 frosted">
+    <div class="px-6 pt-10 pb-8">
       <span class="font-display text-xl font-semibold tracking-tight text-ink">Family Budget</span>
       <p class="text-xs text-muted mt-0.5">Household finance</p>
     </div>
 
-    <nav class="flex-1 px-6 space-y-0.5">
+    <nav class="flex-1 px-4 space-y-0.5">
       <router-link
         v-for="item in navigation"
         :key="item.path"
         :to="item.path"
         :class="[
-          'group flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+          'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
           route.path === item.path
             ? 'bg-accent/10 text-accent'
             : 'text-muted hover:text-ink hover:bg-paper-dark'
@@ -43,7 +43,7 @@ const navigation = [
       </router-link>
     </nav>
 
-    <div class="p-6 border-t border-rule">
+    <div class="p-4 border-t border-rule">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-semibold shrink-0">
           {{ authStore.user?.full_name?.charAt(0) || 'U' }}

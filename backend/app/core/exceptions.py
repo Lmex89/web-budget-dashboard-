@@ -96,6 +96,11 @@ class EmailAlreadyRegisteredException(ConflictException):
 # ─── Expense Exceptions ──────────────────────────────────────────────────────
 #
 
+class CategoryNotFoundException(NotFoundException):
+    def __init__(self, category_id: str):
+        super().__init__("Category", category_id)
+
+
 class ExpenseNotFoundException(NotFoundException):
     def __init__(self, expense_id: str):
         super().__init__("Expense", expense_id)

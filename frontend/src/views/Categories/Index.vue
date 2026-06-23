@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref, nextTick } from 'vue'
 import { useCategoryStore } from '@/stores/categories'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import PaperCard from '@/components/ui/PaperCard.vue'
 import FormField from '@/components/ui/FormField.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useForm } from '@/composables/useForm'
-import type { CreateCategoryPayload } from '@/types'
+import type { CreateCategoryPayload, UpdateCategoryPayload } from '@/types'
 
 const categoryStore = useCategoryStore()
 
@@ -33,6 +33,62 @@ const { form, showForm, errorMessage, toggleForm, handleSubmit } = useForm<Categ
     await categoryStore.createCategory(payload)
   },
 })
+
+interface EditingState {
+  categoryId: string
+  name: string
+  saving: boolean
+  error: string | null
+}
+
+const editing = ref<EditingState | null>(null)
+const editInputRef = ref<HTMLInputElement | null>(null)
+
+function startEdit(categoryId: string, currentName: string) {
+  editing.value = {
+    categoryId,
+    name: currentName,
+    saving: false,
+    error: null,
+  }
+  nextTick(() => {
+    editInputRef.value?.focus()
+    editInputRef.value?.select()
+  })
+}
+
+function cancelEdit() {
+  editing.value = null
+}
+
+async function saveEdit(categoryId: string) {
+  const state = editing.value
+  if (!state) return
+  const trimmed = state.name.trim()
+  if (!trimmed) {
+    state.error = 'Name is required'
+    return
+  }
+  state.saving = true
+  state.error = null
+  try {
+    const payload: UpdateCategoryPayload = { name: trimmed }
+    await categoryStore.updateCategory(categoryId, payload)
+    editing.value = null
+  } catch (e: any) {
+    state.saving = false
+    state.error = e?.response?.data?.error?.message || 'Failed to save'
+  }
+}
+
+function onEditKeydown(event: KeyboardEvent, categoryId: string) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    saveEdit(categoryId)
+  } else if (event.key === 'Escape') {
+    cancelEdit()
+  }
+}
 
 onMounted(async () => {
   await categoryStore.fetchCategories()
@@ -124,9 +180,24 @@ onMounted(async () => {
         >
           {{ cat.icon || '🏷️' }}
         </div>
-        <div class="min-w-0">
-          <h3 class="font-semibold truncate">{{ cat.name }}</h3>
-          <p class="text-xs text-muted mt-0.5 uppercase tracking-wide">{{ cat.color || 'No color' }}</p>
+        <div class="min-w-0 flex-1">
+          <div v-if="editing?.categoryId === cat.id" class="space-y-1">
+            <input
+              ref="editInputRef"
+              v-model="editing.name"
+              type="text"
+              class="eb-input w-full text-sm"
+              maxlength="100"
+              :disabled="editing.saving"
+              @keydown="onEditKeydown($event, cat.id)"
+              @blur="saveEdit(cat.id)"
+            />
+            <p v-if="editing.error" class="text-xs text-danger">{{ editing.error }}</p>
+          </div>
+          <div v-else class="group cursor-pointer" @click="startEdit(cat.id, cat.name)">
+            <h3 class="font-semibold truncate group-hover:text-accent transition-colors">{{ cat.name }}</h3>
+            <p class="text-xs text-muted mt-0.5 uppercase tracking-wide">{{ cat.color || 'No color' }}</p>
+          </div>
         </div>
       </PaperCard>
     </div>
