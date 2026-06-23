@@ -10,7 +10,7 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useForm } from '@/composables/useForm'
 import api from '@/services/api'
-import type { CreateExpensePayload } from '@/types'
+import type { CreateExpensePayload, UpdateExpensePayload, ExpenseListItem } from '@/types'
 
 const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
@@ -19,6 +19,7 @@ const creditCardStore = useCreditCardStore()
 const filterCategory = ref('')
 const filterStartDate = ref('')
 const filterEndDate = ref('')
+const editingId = ref<string | null>(null)
 
 function openDatePicker(e: MouseEvent) {
   ;(e.target as HTMLInputElement).showPicker()
@@ -31,8 +32,6 @@ interface ExpenseForm {
   payment_method: string
   category_id: string
   credit_card_id: string
-  is_installment: boolean
-  total_installments: number | null
 }
 
 const initialForm: ExpenseForm = {
@@ -42,28 +41,58 @@ const initialForm: ExpenseForm = {
   payment_method: 'debit',
   category_id: '',
   credit_card_id: '',
-  is_installment: false,
-  total_installments: null,
 }
 
-const { form, showForm, toggleForm, handleSubmit, errorMessage } = useForm<ExpenseForm>({
+const { form, showForm, toggleForm, handleSubmit, errorMessage, resetForm } = useForm<ExpenseForm>({
   initialValues: initialForm,
   onSubmit: async (values) => {
-    const payload: CreateExpensePayload = {
-      ...values,
-      credit_card_id: values.credit_card_id || null,
-      date: new Date(values.date).toISOString(),
+    if (editingId.value) {
+      const payload: UpdateExpensePayload = {
+        ...values,
+        credit_card_id: values.credit_card_id || null,
+        date: new Date(values.date).toISOString(),
+      }
+      await expenseStore.updateExpense(editingId.value, payload)
+      editingId.value = null
+    } else {
+      const payload: CreateExpensePayload = {
+        ...values,
+        credit_card_id: values.credit_card_id || null,
+        is_installment: false,
+        total_installments: null,
+        date: new Date(values.date).toISOString(),
+      }
+      await expenseStore.createExpense(payload)
     }
-    await expenseStore.createExpense(payload)
     await fetchExpenses()
   },
 })
+
+function startEdit(expense: ExpenseListItem) {
+  editingId.value = expense.id
+  form.value.amount = Number(expense.amount)
+  form.value.description = expense.description || ''
+  form.value.date = expense.date.split('T')[0]
+  form.value.payment_method = expense.payment_method
+  form.value.category_id = expense.category_id
+  form.value.credit_card_id = expense.credit_card_id || ''
+  if (!showForm.value) showForm.value = true
+}
+
+function cancelForm() {
+  editingId.value = null
+  resetForm()
+  showForm.value = false
+}
 
 const showCreditCardField = computed(() => form.value.payment_method === 'credit')
 
 const hasActiveFilters = computed(
   () => filterCategory.value || filterStartDate.value || filterEndDate.value
 )
+
+const formTitle = computed(() => editingId.value ? 'Edit expense' : 'New expense')
+const submitLabel = computed(() => editingId.value ? 'Update expense' : 'Save expense')
 
 async function fetchExpenses() {
   await expenseStore.fetchExpenses({
@@ -164,6 +193,7 @@ async function handleDelete(id: string) {
       @submit.prevent="handleSubmit"
       class="paper-card p-5 md:p-6 space-y-5 animate-fade-up"
     >
+      <h3 class="section-title text-base">{{ formTitle }}</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <FormField label="Amount" for-id="amount">
           <input
@@ -222,8 +252,8 @@ async function handleDelete(id: string) {
       <p v-if="errorMessage" class="text-sm text-danger">{{ errorMessage }}</p>
 
       <div class="flex items-center gap-3 pt-1">
-        <button type="submit" class="eb-btn eb-btn-primary">Save expense</button>
-        <button type="button" class="eb-btn eb-btn-ghost" @click="showForm = false">Cancel</button>
+        <button type="submit" class="eb-btn eb-btn-primary">{{ submitLabel }}</button>
+        <button type="button" class="eb-btn eb-btn-ghost" @click="cancelForm">Cancel</button>
       </div>
     </form>
 
@@ -244,12 +274,20 @@ async function handleDelete(id: string) {
         </div>
         <div class="text-right shrink-0">
           <p class="text-sm font-semibold tabular-nums">{{ formatCurrency(expense.amount) }}</p>
-          <button
-            class="text-xs text-danger hover:underline mt-1"
-            @click="handleDelete(expense.id)"
-          >
-            Delete
-          </button>
+          <div class="flex items-center justify-end gap-2 mt-1">
+            <button
+              class="text-xs font-semibold text-accent hover:underline"
+              @click="startEdit(expense)"
+            >
+              Edit
+            </button>
+            <button
+              class="text-xs text-danger hover:underline"
+              @click="handleDelete(expense.id)"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </PaperCard>
     </div>
@@ -264,7 +302,7 @@ async function handleDelete(id: string) {
             <th>Category</th>
             <th class="text-right">Amount</th>
             <th>Paid by</th>
-            <th></th>
+            <th class="text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -274,7 +312,10 @@ async function handleDelete(id: string) {
             <td>{{ expense.category_name }}</td>
             <td class="text-right font-semibold tabular-nums">{{ formatCurrency(expense.amount) }}</td>
             <td class="text-muted">{{ expense.user_name }}</td>
-            <td>
+            <td class="text-right">
+              <button class="text-xs font-semibold text-accent hover:underline mr-3" @click="startEdit(expense)">
+                Edit
+              </button>
               <button class="text-xs font-semibold text-danger hover:underline" @click="handleDelete(expense.id)">
                 Delete
               </button>

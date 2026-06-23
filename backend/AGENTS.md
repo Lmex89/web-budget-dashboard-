@@ -38,6 +38,14 @@ backend/app/
 
 1. Model → 2. Repository interface → 3. Add to UoW → 4. SQLAlchemy impl → 5. Service → 6. DI wiring → 7. Route → 8. Schema → 9. Exception (if needed) → 10. Migration SQL
 
+## Soft delete (required)
+
+- All models **must** include a `deleted_at` column (`Mapped[datetime | None]`).
+- Repository `delete()` **must** set `deleted_at = datetime.utcnow()` — never `self.db.delete(obj)`.
+- Every query method **must** add `.where(model.deleted_at.is_(None))` to hide soft-deleted rows.
+- Implement a private `_active_filter(self)` helper in each repository that returns the filter condition, and reuse it in every query.
+- Migration SQL must include `ALTER TABLE ... ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL` for any new table.
+
 ## Relevant skills
 
 - `.agents/skills/fastapi-patterns/` — authoritative backend patterns guide

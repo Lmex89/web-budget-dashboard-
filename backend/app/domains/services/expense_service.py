@@ -5,6 +5,7 @@ SRP: Single responsibility for expense lifecycle (create, read, update, delete).
 OCP: Open for extension via dependency injection of IUnitOfWork.
 DIP: Depends on IUnitOfWork abstraction, not concrete repositories.
 """
+import uuid
 from datetime import datetime
 from typing import List, Optional
 
@@ -12,7 +13,7 @@ from loguru import logger
 
 from app.domains.repositories.unit_of_work import IUnitOfWork
 from app.domains.services.installment_service import InstallmentService
-from app.models import Expense, PaymentMethod
+from app.models import Expense, PaymentMethod, AuditLog
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 from app.core.exceptions import (
     ExpenseNotFoundException,
@@ -39,18 +40,17 @@ class ExpenseService:
     async def get_by_id(self, expense_id: str, family_id: str) -> Expense:
         """Fetch a single expense scoped to the given family."""
         logger.debug(f"Fetching expense: id={expense_id}, family={family_id}")
-        async with self.uow:
-            expense = await self.uow.expenses.get_by_id(expense_id)
-            if not expense:
-                logger.warning(f"Expense not found: id={expense_id}")
-                raise ExpenseNotFoundException(expense_id)
-            if expense.family_id != family_id:
-                logger.warning(
-                    f"Family mismatch: expense={expense_id} belongs to "
-                    f"family={expense.family_id}, requested by family={family_id}"
-                )
-                raise ExpenseNotInFamilyException()
-            return expense
+        expense = await self.uow.expenses.get_by_id(expense_id)
+        if not expense:
+            logger.warning(f"Expense not found: id={expense_id}")
+            raise ExpenseNotFoundException(expense_id)
+        if expense.family_id != family_id:
+            logger.warning(
+                f"Family mismatch: expense={expense_id} belongs to "
+                f"family={expense.family_id}, requested by family={family_id}"
+            )
+            raise ExpenseNotInFamilyException()
+        return expense
 
     async def list_by_family_csv(
         self,
@@ -112,9 +112,27 @@ class ExpenseService:
             if data.is_installment and data.total_installments:
                 await self.installments.generate(created.id, data.total_installments, data.amount)
 
+            audit = AuditLog(
+                id=str(uuid.uuid4()),
+                entity_type="expense",
+                entity_id=created.id,
+                action="create",
+                old_values=None,
+                new_values={
+                    "amount": self._serialize_value(created.amount),
+                    "description": created.description,
+                    "date": self._serialize_value(created.date),
+                    "payment_method": created.payment_method.value if created.payment_method else None,
+                    "category_id": created.category_id,
+                    "credit_card_id": created.credit_card_id,
+                },
+                user_id=user_id,
+            )
+            await self.uow.audit_logs.create(audit)
+
             return created
 
-    async def update(self, expense_id: str, data: ExpenseUpdate, family_id: str) -> Expense:
+    async def update(self, expense_id: str, data: ExpenseUpdate, family_id: str, user_id: str) -> Expense:
         """Partially update an expense."""
         logger.info(f"Updating expense: id={expense_id}")
         async with self.uow:
@@ -122,17 +140,68 @@ class ExpenseService:
             update_data = data.model_dump(exclude_unset=True)
             logger.debug(f"Updating fields for expense={expense_id}: {list(update_data.keys())}")
 
+            old_values = {k: self._serialize_value(getattr(expense, k, None)) for k in update_data}
+
             for field, value in update_data.items():
                 setattr(expense, field, value)
 
             expense.updated_at = datetime.utcnow()
-            return await self.uow.expenses.update(expense)
+            updated = await self.uow.expenses.update(expense)
 
-    async def delete(self, expense_id: str, family_id: str) -> bool:
-        """Soft-delete or hard-delete an expense (currently hard-delete)."""
+            new_values = {k: self._serialize_value(getattr(updated, k, None)) for k in update_data}
+
+            audit = AuditLog(
+                id=str(uuid.uuid4()),
+                entity_type="expense",
+                entity_id=expense_id,
+                action="update",
+                old_values=old_values,
+                new_values=new_values,
+                user_id=user_id,
+            )
+            await self.uow.audit_logs.create(audit)
+
+            return updated
+
+    @staticmethod
+    def _serialize_value(value):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.isoformat()
+        if hasattr(value, 'value'):
+            return value.value
+        if isinstance(value, float):
+            return str(value)
+        from decimal import Decimal
+        if isinstance(value, Decimal):
+            return str(value)
+        return value
+
+    async def delete(self, expense_id: str, family_id: str, user_id: str) -> bool:
+        """Soft-delete an expense."""
         logger.warning(f"Deleting expense: id={expense_id}, family={family_id}")
         async with self.uow:
-            await self.get_by_id(expense_id, family_id)
+            expense = await self.get_by_id(expense_id, family_id)
+
+            audit = AuditLog(
+                id=str(uuid.uuid4()),
+                entity_type="expense",
+                entity_id=expense_id,
+                action="delete",
+                old_values={
+                    "amount": self._serialize_value(expense.amount),
+                    "description": expense.description,
+                    "date": self._serialize_value(expense.date),
+                    "payment_method": expense.payment_method.value if expense.payment_method else None,
+                    "category_id": expense.category_id,
+                    "credit_card_id": expense.credit_card_id,
+                },
+                new_values=None,
+                user_id=user_id,
+            )
+            await self.uow.audit_logs.create(audit)
+
             return await self.uow.expenses.delete(expense_id)
 
     # ── Private validators (single responsibility per check) ──

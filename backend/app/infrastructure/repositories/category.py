@@ -13,11 +13,14 @@ class SQLAlchemyCategoryRepository(CategoryRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    def _active_filter(self):
+        return Category.deleted_at.is_(None)
+
     async def get_by_id(self, category_id: str) -> Optional[Category]:
         logger.debug(f"Querying category by id: {category_id}")
         try:
             result = await self.db.execute(
-                select(Category).where(Category.id == category_id)
+                select(Category).where(Category.id == category_id, self._active_filter())
             )
             category = result.scalar_one_or_none()
             logger.debug(f"Category {category_id}: {'found' if category else 'not found'}")
@@ -31,7 +34,7 @@ class SQLAlchemyCategoryRepository(CategoryRepository):
         try:
             result = await self.db.execute(
                 select(Category)
-                .where(Category.family_id == family_id)
+                .where(Category.family_id == family_id, self._active_filter())
                 .order_by(Category.name.asc())
             )
             categories = list(result.scalars().all())
@@ -49,6 +52,7 @@ class SQLAlchemyCategoryRepository(CategoryRepository):
                     Category.family_id == family_id,
                     Category.name == name,
                     Category.parent_id.is_(None),
+                    self._active_filter(),
                 )
             )
             count = result.scalar_one()

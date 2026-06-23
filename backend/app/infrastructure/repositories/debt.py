@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -15,10 +16,15 @@ class SQLAlchemyDebtRepository(DebtRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    def _active_filter(self):
+        return Debt.deleted_at.is_(None)
+
     async def get_by_id(self, debt_id: str) -> Optional[Debt]:
         logger.debug(f"Querying debt by id: {debt_id}")
         try:
-            result = await self.db.execute(select(Debt).where(Debt.id == debt_id))
+            result = await self.db.execute(
+                select(Debt).where(Debt.id == debt_id, self._active_filter())
+            )
             return result.scalar_one_or_none()
         except SQLAlchemyError:
             logger.exception(f"Database error fetching debt {debt_id}")
@@ -29,7 +35,7 @@ class SQLAlchemyDebtRepository(DebtRepository):
         try:
             result = await self.db.execute(
                 select(Debt)
-                .where(Debt.family_id == family_id)
+                .where(Debt.family_id == family_id, self._active_filter())
                 .options(selectinload(Debt.expenses))
                 .order_by(Debt.created_at.desc())
             )
@@ -63,18 +69,18 @@ class SQLAlchemyDebtRepository(DebtRepository):
             raise AppException("ERR_DATABASE", "Failed to update debt.")
 
     async def delete(self, debt_id: str) -> bool:
-        logger.warning(f"Deleting debt: id={debt_id}")
+        logger.warning(f"Soft-deleting debt: id={debt_id}")
         try:
             debt = await self.get_by_id(debt_id)
             if not debt:
                 raise NotFoundException("Debt", debt_id)
-            await self.db.delete(debt)
+            debt.deleted_at = datetime.utcnow()
             await self.db.flush()
             return True
         except NotFoundException:
             raise
         except SQLAlchemyError:
-            logger.exception(f"Database error deleting debt {debt_id}")
+            logger.exception(f"Database error soft-deleting debt {debt_id}")
             raise AppException("ERR_DATABASE", "Failed to delete debt.")
 
     async def update_remaining_amount(self, debt_id: str, new_amount: float) -> Debt:

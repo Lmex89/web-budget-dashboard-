@@ -14,6 +14,7 @@ export interface ExpenseListItem {
   description: string | null
   date: string
   payment_method: string
+  category_id: string
   category_name: string
   user_name: string
   credit_card_id: string | null
@@ -63,6 +64,15 @@ export interface CreateExpensePayload {
   category_id: string
   is_installment: boolean
   total_installments: number | null
+  credit_card_id?: string | null
+}
+
+export interface UpdateExpensePayload {
+  amount?: number
+  description?: string
+  date?: string
+  payment_method?: string
+  category_id?: string
   credit_card_id?: string | null
 }
 

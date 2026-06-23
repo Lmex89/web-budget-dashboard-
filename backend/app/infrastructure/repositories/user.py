@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -15,10 +16,15 @@ class SQLAlchemyUserRepository(UserRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    def _active_filter(self):
+        return User.deleted_at.is_(None)
+
     async def get_by_id(self, user_id: str) -> Optional[User]:
         logger.debug(f"Querying user by id: {user_id}")
         try:
-            result = await self.db.execute(select(User).where(User.id == user_id))
+            result = await self.db.execute(
+                select(User).where(User.id == user_id, self._active_filter())
+            )
             return result.scalar_one_or_none()
         except SQLAlchemyError:
             logger.exception(f"Database error fetching user {user_id}")
@@ -27,7 +33,9 @@ class SQLAlchemyUserRepository(UserRepository):
     async def get_by_email(self, email: str) -> Optional[User]:
         logger.debug(f"Querying user by email: {email}")
         try:
-            result = await self.db.execute(select(User).where(User.email == email))
+            result = await self.db.execute(
+                select(User).where(User.email == email, self._active_filter())
+            )
             return result.scalar_one_or_none()
         except SQLAlchemyError:
             logger.exception("Database error fetching user by email")
@@ -56,18 +64,18 @@ class SQLAlchemyUserRepository(UserRepository):
             raise AppException("ERR_DATABASE", "Failed to update user.")
 
     async def delete(self, user_id: str) -> bool:
-        logger.warning(f"Deleting user: id={user_id}")
+        logger.warning(f"Soft-deleting user: id={user_id}")
         try:
             user = await self.get_by_id(user_id)
             if not user:
                 raise NotFoundException("User", user_id)
-            await self.db.delete(user)
+            user.deleted_at = datetime.utcnow()
             await self.db.flush()
             return True
         except NotFoundException:
             raise
         except SQLAlchemyError:
-            logger.exception(f"Database error deleting user {user_id}")
+            logger.exception(f"Database error soft-deleting user {user_id}")
             raise AppException("ERR_DATABASE", "Failed to delete user.")
 
     async def get_by_family(self, family_id: str) -> List[User]:
@@ -75,7 +83,7 @@ class SQLAlchemyUserRepository(UserRepository):
         try:
             result = await self.db.execute(
                 select(User)
-                .where(User.family_id == family_id)
+                .where(User.family_id == family_id, self._active_filter())
                 .options(selectinload(User.family))
                 .order_by(User.full_name)
             )

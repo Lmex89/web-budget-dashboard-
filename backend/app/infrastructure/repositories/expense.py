@@ -15,12 +15,15 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    def _active_filter(self):
+        return Expense.deleted_at.is_(None)
+
     async def get_by_id(self, expense_id: str) -> Optional[Expense]:
         logger.debug(f"Querying expense by id: {expense_id}")
         try:
             result = await self.db.execute(
                 select(Expense)
-                .where(Expense.id == expense_id)
+                .where(Expense.id == expense_id, self._active_filter())
                 .options(
                     selectinload(Expense.category),
                     selectinload(Expense.user),
@@ -49,7 +52,7 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         end_date: Optional[str] = None,
         credit_card_id: Optional[str] = None,
     ) -> tuple[List[Expense], int]:
-        conditions = [Expense.family_id == family_id]
+        conditions = [Expense.family_id == family_id, self._active_filter()]
 
         if category_id:
             conditions.append(Expense.category_id == category_id)
@@ -98,7 +101,7 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> List[Expense]:
-        conditions = [Expense.family_id == family_id]
+        conditions = [Expense.family_id == family_id, self._active_filter()]
         if category_id:
             conditions.append(Expense.category_id == category_id)
         if start_date:
@@ -147,19 +150,19 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             raise AppException("ERR_DATABASE", "Failed to update expense.")
 
     async def delete(self, expense_id: str) -> bool:
-        logger.debug(f"Removing expense: id={expense_id}")
+        logger.warning(f"Soft-deleting expense: id={expense_id}")
         try:
             expense = await self.get_by_id(expense_id)
             if not expense:
                 raise NotFoundException("Expense", expense_id)
-            await self.db.delete(expense)
+            expense.deleted_at = datetime.utcnow()
             await self.db.flush()
-            logger.info(f"Expense removed: id={expense_id}")
+            logger.info(f"Expense soft-deleted: id={expense_id}")
             return True
         except NotFoundException:
             raise
         except SQLAlchemyError:
-            logger.exception(f"Database error deleting expense {expense_id}")
+            logger.exception(f"Database error soft-deleting expense {expense_id}")
             raise AppException("ERR_DATABASE", "Failed to delete expense.")
 
     async def get_family_monthly_summary(
@@ -174,6 +177,7 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         try:
             conditions = [
                 Expense.family_id == family_id,
+                self._active_filter(),
                 extract("year", Expense.date) == year,
                 extract("month", Expense.date) == month,
             ]
@@ -202,6 +206,7 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         try:
             conditions = [
                 Expense.family_id == family_id,
+                self._active_filter(),
                 extract("year", Expense.date) == year,
                 extract("month", Expense.date) == month,
             ]

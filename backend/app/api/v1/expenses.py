@@ -60,6 +60,7 @@ async def list_expenses(
                 "description": e.description,
                 "date": e.date,
                 "payment_method": e.payment_method,
+                "category_id": e.category_id,
                 "category_name": e.category.name,
                 "user_name": e.user.full_name,
                 "credit_card_id": e.credit_card_id,
@@ -108,7 +109,9 @@ async def update_expense(
     service: ExpenseService = Depends(get_expense_service),
 ):
     logger.info(f"PUT /expenses/{expense_id} - user={current_user.id}")
-    expense = await service.update(expense_id, data, current_user.family_id)
+    expense = await service.update(
+        expense_id, data, current_user.family_id, current_user.id
+    )
     return BaseResponse(data=ExpenseResponse.model_validate(expense))
 
 
@@ -119,7 +122,7 @@ async def delete_expense(
     service: ExpenseService = Depends(get_expense_service),
 ):
     logger.warning(f"DELETE /expenses/{expense_id} - user={current_user.id}")
-    await service.delete(expense_id, current_user.family_id)
+    await service.delete(expense_id, current_user.family_id, current_user.id)
     return BaseResponse(data={"deleted": True})
 
 

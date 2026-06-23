@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { shallowRef } from 'vue'
-import type { ExpenseListItem, MonthlySummary, CategoryDistribution, CreateExpensePayload } from '@/types'
+import type { ExpenseListItem, MonthlySummary, CategoryDistribution, CreateExpensePayload, UpdateExpensePayload } from '@/types'
 import api from '@/services/api'
 
 interface FetchExpensesParams {
@@ -25,6 +25,11 @@ export const useExpenseStore = defineStore('expenses', () => {
 
   async function createExpense(payload: CreateExpensePayload) {
     const { data } = await api.post('/api/v1/expenses', payload)
+    return data
+  }
+
+  async function updateExpense(id: string, payload: UpdateExpensePayload) {
+    const { data } = await api.put(`/api/v1/expenses/${id}`, payload)
     return data
   }
 
@@ -57,6 +62,7 @@ export const useExpenseStore = defineStore('expenses', () => {
     categoryDistribution,
     fetchExpenses,
     createExpense,
+    updateExpense,
     deleteExpense,
     fetchMonthlySummary,
     fetchCategoryDistribution,

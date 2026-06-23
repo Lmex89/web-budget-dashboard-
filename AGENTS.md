@@ -82,6 +82,13 @@ All backend code **must** follow SOLID principles:
 
 **Breaking any of these rules must be justified with a comment explaining the tradeoff.**
 
+## Soft delete (required)
+
+- All tables **must** have a `deleted_at` TIMESTAMP NULL column.
+- Repository `delete` methods **must** set `deleted_at` — never call `db.delete()`.
+- Every query method **must** filter with `model.deleted_at.is_(None)` to exclude soft-deleted rows.
+- Every new repository implementation **must** follow this pattern via a private `_active_filter()` helper.
+
 ## Async and transaction conventions
 
 - Backend DB code is async SQLAlchemy; keep new DB logic async (session setup: [backend/app/db/session.py](backend/app/db/session.py)).

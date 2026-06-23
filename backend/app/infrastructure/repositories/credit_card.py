@@ -14,11 +14,14 @@ class SQLAlchemyCreditCardRepository(CreditCardRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    def _active_filter(self):
+        return CreditCard.deleted_at.is_(None)
+
     async def get_by_id(self, card_id: str) -> Optional[CreditCard]:
         logger.debug(f"Querying credit card by id: {card_id}")
         try:
             result = await self.db.execute(
-                select(CreditCard).where(CreditCard.id == card_id)
+                select(CreditCard).where(CreditCard.id == card_id, self._active_filter())
             )
             card = result.scalar_one_or_none()
             return card
@@ -31,7 +34,7 @@ class SQLAlchemyCreditCardRepository(CreditCardRepository):
         try:
             result = await self.db.execute(
                 select(CreditCard)
-                .where(CreditCard.family_id == family_id)
+                .where(CreditCard.family_id == family_id, self._active_filter())
                 .order_by(CreditCard.name.asc())
             )
             cards = list(result.scalars().all())
@@ -48,6 +51,7 @@ class SQLAlchemyCreditCardRepository(CreditCardRepository):
                 select(func.count(CreditCard.id)).where(
                     CreditCard.family_id == family_id,
                     func.lower(CreditCard.name) == name.lower(),
+                    self._active_filter(),
                 )
             )
             count = result.scalar_one()
