@@ -91,6 +91,38 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             logger.exception("Database error listing expenses")
             raise AppException("ERR_DATABASE", "Failed to list expenses.")
 
+    async def get_by_family_csv(
+        self,
+        family_id: str,
+        category_id: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> List[Expense]:
+        conditions = [Expense.family_id == family_id]
+        if category_id:
+            conditions.append(Expense.category_id == category_id)
+        if start_date:
+            conditions.append(Expense.date >= datetime.fromisoformat(start_date))
+        if end_date:
+            conditions.append(Expense.date <= datetime.fromisoformat(end_date))
+        try:
+            stmt = (
+                select(Expense)
+                .where(and_(*conditions))
+                .options(
+                    joinedload(Expense.category),
+                    joinedload(Expense.user),
+                    joinedload(Expense.credit_card),
+                )
+                .order_by(desc(Expense.date))
+            )
+            result = await self.db.execute(stmt)
+            expenses = result.scalars().unique().all()
+            return list(expenses)
+        except SQLAlchemyError:
+            logger.exception("Database error exporting expenses")
+            raise AppException("ERR_DATABASE", "Failed to export expenses.")
+
     async def create(self, expense: Expense) -> Expense:
         logger.debug(f"Persisting new expense: amount={expense.amount}, date={expense.date}")
         try:

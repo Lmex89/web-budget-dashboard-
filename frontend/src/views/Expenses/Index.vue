@@ -9,6 +9,7 @@ import FormField from '@/components/ui/FormField.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useForm } from '@/composables/useForm'
+import api from '@/services/api'
 import type { CreateExpensePayload } from '@/types'
 
 const expenseStore = useExpenseStore()
@@ -79,6 +80,22 @@ function clearFilters() {
   fetchExpenses()
 }
 
+async function exportCSV() {
+  const params: Record<string, string> = {}
+  if (filterCategory.value) params.category_id = filterCategory.value
+  if (filterStartDate.value) params.start_date = filterStartDate.value
+  if (filterEndDate.value) params.end_date = filterEndDate.value
+  const { data } = await api.get('/api/v1/expenses/export/csv', { params, responseType: 'blob' })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'expenses.csv')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
 watch([filterCategory, filterStartDate, filterEndDate], () => {
   fetchExpenses()
 })
@@ -135,6 +152,9 @@ async function handleDelete(id: string) {
           @click="clearFilters"
         >
           Clear
+        </button>
+        <button class="eb-btn eb-btn-ghost text-sm ml-auto" @click="exportCSV">
+          Export CSV
         </button>
       </div>
     </PaperCard>

@@ -8,7 +8,7 @@ class ExpenseRepository(ABC):
     @abstractmethod
     async def get_by_id(self, expense_id: str) -> Optional[Expense]:
         pass
-    
+
     @abstractmethod
     async def get_by_family(
         self,
@@ -21,19 +21,29 @@ class ExpenseRepository(ABC):
         credit_card_id: Optional[str] = None,
     ) -> tuple[List[Expense], int]:
         pass
-    
+
+    @abstractmethod
+    async def get_by_family_csv(
+        self,
+        family_id: str,
+        category_id: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> List[Expense]:
+        pass
+
     @abstractmethod
     async def create(self, expense: Expense) -> Expense:
         pass
-    
+
     @abstractmethod
     async def update(self, expense: Expense) -> Expense:
         pass
-    
+
     @abstractmethod
     async def delete(self, expense_id: str) -> bool:
         pass
-    
+
     @abstractmethod
     async def get_family_monthly_summary(
         self,
@@ -43,7 +53,7 @@ class ExpenseRepository(ABC):
         category_id: Optional[str] = None,
     ) -> dict:
         pass
-    
+
     @abstractmethod
     async def get_category_distribution(
         self,

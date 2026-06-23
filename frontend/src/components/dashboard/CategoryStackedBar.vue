@@ -20,8 +20,9 @@ const sortedSegments = computed(() =>
   [...props.segments].sort((a, b) => b.amount - a.amount)
 )
 
-function segmentColor(index: number): string {
-  return `var(--cat-${index})`
+function segmentColor(segment: { colorIndex?: number; color?: string | null }): string {
+  if (segment.color) return segment.color
+  return `var(--cat-${segment.colorIndex || 1})`
 }
 </script>
 
@@ -57,7 +58,7 @@ function segmentColor(index: number): string {
           :key="segment.categoryId"
           :style="{
             width: `${segment.percentage}%`,
-            backgroundColor: segmentColor(segment.colorIndex),
+            backgroundColor: segmentColor(segment),
           }"
           class="h-full transition-all duration-700 first:rounded-l-full last:rounded-r-full"
           :title="`${segment.categoryName}: ${formatCurrency(segment.amount)}`"
@@ -78,7 +79,7 @@ function segmentColor(index: number): string {
         >
           <span
             class="w-2.5 h-2.5 rounded-full shrink-0"
-            :style="{ backgroundColor: segmentColor(segment.colorIndex) }"
+            :style="{ backgroundColor: segmentColor(segment) }"
           />
           <div class="min-w-0 flex-1 flex items-baseline justify-between gap-2">
             <span class="text-xs sm:text-[0.8125rem] text-muted truncate">

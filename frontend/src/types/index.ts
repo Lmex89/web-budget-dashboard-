@@ -153,7 +153,8 @@ export interface CategoryBarSegment {
   categoryName: string
   amount: number
   percentage: number
-  colorIndex: 1 | 2 | 3 | 4 | 5
+  colorIndex?: 1 | 2 | 3 | 4 | 5
+  color?: string | null
 }
 
 export interface StatCardData {

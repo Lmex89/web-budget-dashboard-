@@ -52,6 +52,19 @@ class ExpenseService:
                 raise ExpenseNotInFamilyException()
             return expense
 
+    async def list_by_family_csv(
+        self,
+        family_id: str,
+        category_id: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> List[Expense]:
+        logger.info(f"Exporting expenses CSV: family={family_id}")
+        async with self.uow:
+            return await self.uow.expenses.get_by_family_csv(
+                family_id, category_id, start_date, end_date,
+            )
+
     async def list_by_family(
         self,
         family_id: str,

@@ -123,6 +123,49 @@ async def delete_expense(
     return BaseResponse(data={"deleted": True})
 
 
+# ── Export ────────────────────────────────────────────────────────────────────
+
+@router.get("/export/csv")
+async def export_expenses_csv(
+    category_id: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None, description="ISO format date"),
+    end_date: Optional[str] = Query(None, description="ISO format date"),
+    current_user: User = Depends(get_current_active_user),
+    service: ExpenseService = Depends(get_expense_service),
+):
+    logger.info(f"GET /expenses/export/csv - user={current_user.id}")
+    expenses = await service.list_by_family_csv(
+        family_id=current_user.family_id,
+        category_id=category_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    import csv
+    import io
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Date", "Description", "Category", "Amount", "Payment Method", "Paid By"])
+    for e in expenses:
+        writer.writerow([
+            e.date.isoformat() if hasattr(e.date, "isoformat") else str(e.date),
+            e.description or "",
+            e.category.name if e.category else "",
+            str(e.amount),
+            e.payment_method.value if hasattr(e.payment_method, "value") else e.payment_method,
+            e.user.full_name if e.user else "",
+        ])
+
+    output.seek(0)
+    from fastapi.responses import Response
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=expenses.csv"},
+    )
+
+
 # ── Analytics ─────────────────────────────────────────────────────────────────
 
 @router.get("/analytics/monthly-summary", response_model=BaseResponse)
