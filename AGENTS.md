@@ -119,9 +119,9 @@ All backend code **must** follow SOLID principles:
 - Debt API/frontend payloads should preserve backend field names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) to avoid adapter drift in `frontend/src/stores/debts.ts` and debt views.
 - Category names can be edited inline from the Categories route; the backend enforces family ownership and name uniqueness on update.
 
-## Git commit conventions
+## Git commit conventions (required)
 
-Follow **Conventional Commits** for all commits:
+Follow **Conventional Commits 1.0.0** for every commit (see https://www.conventionalcommits.org):
 
 ```
 <type>[optional scope]: <description>
@@ -131,10 +131,42 @@ Follow **Conventional Commits** for all commits:
 [optional footer(s)]
 ```
 
-- **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
-- **Scope:** area of codebase (`dashboard`, `categories`, `auth`, `backend`, `frontend`)
-- **Description:** imperative mood, lowercase, no trailing period
-- **Example:** `feat(categories): add inline name editing from categories route`
+### Structure rules (from Git and Conventional Commits spec)
+
+| Rule | Standard | Source |
+|---|---|---|
+| Subject line max 50 chars | **Required** | Git docs |
+| Body wrap at 72 chars | **Required** | Git docs |
+| Blank line between subject and body | **Required** | Git docs |
+| Imperative mood in description ("add", not "added/adding") | **Required** | Git docs |
+| Body explains **why**, not what (the diff shows the what) | **Required** | Git docs |
+| Type is mandatory, lowercase | **Required** | Conventional Commits |
+| Scope in parentheses after type, optional | **Required when applicable** | Conventional Commits |
+| `!` after type/scope for breaking changes | **Optional** | Conventional Commits |
+| `BREAKING CHANGE:` as footer for breaking changes | **Required** | Conventional Commits |
+| Refer to issues/PRs in footers (`Closes #123`, `Refs #456`) | **Recommended** | Conventional Commits |
+
+### Allowed types
+
+`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`, `revert`
+
+### Scope examples from this repo
+
+`dashboard`, `categories`, `auth`, `backend`, `frontend`, `expenses`, `debts`, `migrations`, `deps`
+
+### Examples
+
+```text
+feat(categories): add inline name editing from categories route
+
+fix(auth): return 401 on expired token instead of 500
+
+refactor(backend): extract audit log helper to shared module
+
+feat(api)!: change expense response envelope
+
+BREAKING CHANGE: expense list response now wraps data under `items` key
+```
 
 ## Docker optimization
 
