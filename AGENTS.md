@@ -68,6 +68,20 @@ Service rules:
 - Services DO NOT call each other's UoW methods directly — compose via the shared `self.uow`.
 - Add new analytics methods to `AnalyticsService`, not to `ExpenseService`.
 
+## SOLID Principles (required)
+
+All backend code **must** follow SOLID principles:
+
+| Principle | How the backend enforces it |
+|---|---|
+| **S**ingle Responsibility | Each service class owns exactly one domain concern (see table above). Repository interfaces split by entity. |
+| **O**pen/Closed | New query methods are added to the existing repository interface — never modify a method's contract. Extend via new interface methods, not by altering signatures. |
+| **L**iskov Substitution | `IUnitOfWork` returns repository interfaces (`ExpenseRepository`, etc.), not concrete classes. Any SQLAlchemy implementation is swappable. |
+| **I**nterface Segregation | Repository interfaces are per-entity (`ExpenseRepository`, `CategoryRepository`, `DebtRepository`, etc.) — never one giant DAO. |
+| **D**ependency Inversion | Services depend on `IUnitOfWork` (abstraction), not on `SQLAlchemyUnitOfWork` or `AsyncSession`. All DI wiring is in `backend/app/dependencies/`. |
+
+**Breaking any of these rules must be justified with a comment explaining the tradeoff.**
+
 ## Async and transaction conventions
 
 - Backend DB code is async SQLAlchemy; keep new DB logic async (session setup: [backend/app/db/session.py](backend/app/db/session.py)).
