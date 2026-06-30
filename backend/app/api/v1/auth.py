@@ -35,8 +35,7 @@ async def register(
             raise EmailAlreadyRegisteredException(data.email)
 
         family = Family(id=str(uuid.uuid4()), name=data.family_name)
-        uow._session.add(family)
-        await uow._session.flush()
+        await uow.families.create(family)
 
         user = User(
             id=str(uuid.uuid4()),
@@ -46,7 +45,7 @@ async def register(
             family_id=family.id,
             is_admin=True,
         )
-        uow._session.add(user)
+        await uow.users.create(user)
 
     logger.info(f"User registered: id={user.id}, email={user.email}, family={family.id}")
     return BaseResponse(data=UserResponse.model_validate(user).model_dump())
@@ -133,7 +132,7 @@ async def add_user_to_family(
             family_id=current_user.family_id,
             is_admin=False,
         )
-        uow._session.add(user)
+        await uow.users.create(user)
 
     logger.info(f"User added to family: id={user.id}, email={user.email}")
     return BaseResponse(data=UserResponse.model_validate(user).model_dump())

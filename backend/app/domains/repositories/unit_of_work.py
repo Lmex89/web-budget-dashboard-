@@ -5,6 +5,7 @@ from app.domains.repositories.expense import ExpenseRepository
 from app.domains.repositories.category import CategoryRepository
 from app.domains.repositories.credit_card import CreditCardRepository
 from app.domains.repositories.debt import DebtRepository
+from app.domains.repositories.family import FamilyRepository
 from app.domains.repositories.user import UserRepository
 from app.domains.repositories.audit_log import AuditLogRepository
 from app.domains.repositories.installment import InstallmentRepository
@@ -15,6 +16,7 @@ class IUnitOfWork(ABC):
     categories: CategoryRepository
     credit_cards: CreditCardRepository
     debts: DebtRepository
+    families: FamilyRepository
     users: UserRepository
     audit_logs: AuditLogRepository
     installments: InstallmentRepository

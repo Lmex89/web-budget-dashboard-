@@ -8,6 +8,7 @@ from app.infrastructure.repositories.expense import SQLAlchemyExpenseRepository
 from app.infrastructure.repositories.category import SQLAlchemyCategoryRepository
 from app.infrastructure.repositories.credit_card import SQLAlchemyCreditCardRepository
 from app.infrastructure.repositories.debt import SQLAlchemyDebtRepository
+from app.infrastructure.repositories.family import SQLAlchemyFamilyRepository
 from app.infrastructure.repositories.user import SQLAlchemyUserRepository
 from app.infrastructure.repositories.audit_log import SQLAlchemyAuditLogRepository
 from app.infrastructure.repositories.installment import SQLAlchemyInstallmentRepository
@@ -20,6 +21,7 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
         self._categories = None
         self._credit_cards = None
         self._debts = None
+        self._families = None
         self._users = None
         self._audit_logs = None
         self._installments = None
@@ -47,6 +49,12 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
         if self._debts is None:
             self._debts = SQLAlchemyDebtRepository(self._session)
         return self._debts
+
+    @property
+    def families(self):
+        if self._families is None:
+            self._families = SQLAlchemyFamilyRepository(self._session)
+        return self._families
 
     @property
     def users(self):
