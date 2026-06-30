@@ -58,16 +58,20 @@ const categorySegments = computed<CategoryBarSegment[]>(() => {
     return { categoryId: cat?.id || d.category, categoryName: d.category, amount: d.amount, percentage: 0, color: d.color }
   })
   segments.sort((a, b) => b.amount - a.amount)
-  const total = segments.reduce((sum, s) => sum + s.amount, 0)
-  if (segments.length <= MAX_VISIBLE_SEGMENTS + 1) {
-    return segments.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 }))
+  const segmentsWithIndex = segments.map((s, i) => ({
+    ...s,
+    colorIndex: ((i % 5) + 1) as 1 | 2 | 3 | 4 | 5,
+  }))
+  const total = segmentsWithIndex.reduce((sum, s) => sum + s.amount, 0)
+  if (segmentsWithIndex.length <= MAX_VISIBLE_SEGMENTS + 1) {
+    return segmentsWithIndex.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 }))
   }
-  const visible = segments.slice(0, MAX_VISIBLE_SEGMENTS)
-  const others = segments.slice(MAX_VISIBLE_SEGMENTS)
+  const visible = segmentsWithIndex.slice(0, MAX_VISIBLE_SEGMENTS)
+  const others = segmentsWithIndex.slice(MAX_VISIBLE_SEGMENTS)
   const othersAmount = others.reduce((sum, s) => sum + s.amount, 0)
   return [
     ...visible.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 })),
-    { categoryId: 'others', categoryName: `Otros (${others.length})`, amount: othersAmount, percentage: total > 0 ? (othersAmount / total) * 100 : 0, color: null },
+    { categoryId: 'others', categoryName: `Otros (${others.length})`, amount: othersAmount, percentage: total > 0 ? (othersAmount / total) * 100 : 0, color: 'var(--muted)' },
   ]
 })
 
