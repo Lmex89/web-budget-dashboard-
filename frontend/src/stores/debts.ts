@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import type { Debt, DebtCreatePayload } from '@/types'
 import api from '@/services/api'
 
 export const useDebtStore = defineStore('debts', () => {
-  const debts = ref<Debt[]>([])
+  const debts = shallowRef<Debt[]>([])
   const loading = ref(false)
 
   async function fetchDebts() {

@@ -75,9 +75,10 @@ async function saveEdit(categoryId: string) {
     const payload: UpdateCategoryPayload = { name: trimmed }
     await categoryStore.updateCategory(categoryId, payload)
     editing.value = null
-  } catch (e: any) {
+  } catch (e: unknown) {
     state.saving = false
-    state.error = e?.response?.data?.error?.message || 'Failed to save'
+    const err = e as { response?: { data?: { error?: { message?: string } } } }
+    state.error = err?.response?.data?.error?.message || 'Failed to save'
   }
 }
 

@@ -95,7 +95,6 @@ watch([currentMonth, currentYear, selectedCategory], loadData)
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Category distribution -->
       <PaperCard class="p-5 md:p-6 animate-fade-up animation-delay-300">
         <h2 class="section-title mb-6">Category distribution</h2>
         <div v-if="expenseStore.categoryDistribution && expenseStore.categoryDistribution.length > 0" class="space-y-4">
@@ -142,7 +141,6 @@ watch([currentMonth, currentYear, selectedCategory], loadData)
         </div>
       </PaperCard>
 
-      <!-- Recent expenses -->
       <PaperCard class="p-5 md:p-6 animate-fade-up animation-delay-400">
         <div class="flex items-baseline justify-between mb-6">
           <h2 class="section-title">Recent expenses</h2>

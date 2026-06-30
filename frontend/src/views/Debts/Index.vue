@@ -165,7 +165,6 @@ function debtTypeLabel(type: DebtForm['type']): string {
 
     <div v-if="debtStore.loading" class="text-sm text-muted animate-pulse">Loading debts…</div>
 
-    <!-- Mobile list -->
     <div v-else-if="debtStore.debts.length > 0" class="md:hidden space-y-3">
       <PaperCard
         v-for="debt in debtStore.debts"
@@ -194,7 +193,6 @@ function debtTypeLabel(type: DebtForm['type']): string {
       </PaperCard>
     </div>
 
-    <!-- Desktop table -->
     <PaperCard v-else-if="debtStore.debts.length > 0" class="hidden md:block overflow-hidden animate-fade-up">
       <table class="table-editorial">
         <thead>

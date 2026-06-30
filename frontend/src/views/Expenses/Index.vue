@@ -151,7 +151,6 @@ async function handleDelete(id: string) {
       </template>
     </PageHeader>
 
-    <!-- Filter bar -->
     <PaperCard class="p-4" :class="showForm ? 'hidden md:block' : ''">
       <div class="flex flex-wrap items-end gap-3">
         <div class="flex flex-col gap-1">
@@ -257,7 +256,6 @@ async function handleDelete(id: string) {
       </div>
     </form>
 
-    <!-- Mobile list -->
     <div v-if="expenseStore.expenses.length > 0" class="md:hidden space-y-3">
       <PaperCard
         v-for="expense in expenseStore.expenses"
@@ -292,7 +290,6 @@ async function handleDelete(id: string) {
       </PaperCard>
     </div>
 
-    <!-- Desktop table -->
     <PaperCard v-if="expenseStore.expenses.length > 0" class="hidden md:block overflow-hidden animate-fade-up">
       <table class="table-editorial">
         <thead>

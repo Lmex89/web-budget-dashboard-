@@ -26,10 +26,7 @@ const loadingExpenses = ref(false)
 const loadingSegments = ref(false)
 const error = ref<string | null>(null)
 
-const monthLabel = computed(() => {
-  const d = new Date(currentYear.value, currentMonth.value - 1)
-  return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
-})
+const monthLabel = computed(() => `${formatMonthName(currentMonth.value)} ${currentYear.value}`)
 
 const filterMonths = Array.from({ length: 12 }, (_, i) => i + 1)
 const filterYears = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i)
@@ -126,7 +123,6 @@ watch([currentMonth, currentYear, selectedCategory], () => {
 
 <template>
   <div class="space-y-5 sm:space-y-6 lg:space-y-8">
-    <!-- Header: stacked on mobile, flex row on lg+ -->
     <div class="animate-fade-up">
       <p class="eyebrow mb-2">Dashboard</p>
       <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
@@ -137,7 +133,6 @@ watch([currentMonth, currentYear, selectedCategory], () => {
           </p>
         </div>
 
-        <!-- Filters: horizontally scrollable on mobile, inline on lg -->
         <div class="flex items-center gap-2 overflow-x-auto -mx-1 px-1 pb-1 lg:overflow-visible lg:mx-0 lg:px-0 lg:pb-0 shrink-0">
           <select v-model="selectedCategory" class="eb-select flex-1 min-w-[130px] lg:flex-none lg:w-40">
             <option value="">All categories</option>
@@ -159,7 +154,6 @@ watch([currentMonth, currentYear, selectedCategory], () => {
       </div>
     </div>
 
-    <!-- Stat cards: single-column rows on mobile, 3-col on sm+ -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
       <div class="animation-delay-100">
         <StatCard
@@ -187,7 +181,6 @@ watch([currentMonth, currentYear, selectedCategory], () => {
       </div>
     </div>
 
-    <!-- Stacked bar: full width always -->
     <div class="animation-delay-200">
       <CategoryStackedBar
         :segments="categorySegments"
@@ -197,7 +190,6 @@ watch([currentMonth, currentYear, selectedCategory], () => {
       />
     </div>
 
-    <!-- Bottom grid: single column on mobile, 2-col on sm+ -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div class="animation-delay-300">
         <RecentExpensesCard
@@ -215,7 +207,6 @@ watch([currentMonth, currentYear, selectedCategory], () => {
       </div>
     </div>
 
-    <!-- Pie chart: full width on the bottom -->
     <div class="animation-delay-500">
       <ExpensesPieChart
         :segments="categorySegments"
