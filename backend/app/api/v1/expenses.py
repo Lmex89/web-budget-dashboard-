@@ -3,7 +3,8 @@
 Thin route handlers — delegates all business logic to ExpenseService,
 InstallmentService, and AnalyticsService.
 """
-from typing import Optional
+from decimal import Decimal
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from loguru import logger
@@ -171,6 +172,22 @@ async def export_expenses_csv(
 
 # ── Analytics ─────────────────────────────────────────────────────────────────
 
+def _serialize_analytics(data: Any) -> Any:
+    """Convert Decimal values to float for JSON serialization.
+
+    Pydantic v2 serializes Decimal to string in mode='json', which breaks
+    frontend math (NaN from string division). This converts at the API boundary
+    so the repository layer can keep using Decimal.
+    """
+    if isinstance(data, Decimal):
+        return float(data)
+    if isinstance(data, dict):
+        return {k: _serialize_analytics(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [_serialize_analytics(v) for v in data]
+    return data
+
+
 @router.get("/analytics/monthly-summary", response_model=BaseResponse)
 async def monthly_summary(
     year: int = Query(..., ge=2020, le=2100),
@@ -181,7 +198,7 @@ async def monthly_summary(
 ):
     logger.info(f"GET /expenses/analytics/monthly-summary - period={year}-{month:02d}")
     summary = await service.monthly_summary(current_user.family_id, year, month, category_id)
-    return BaseResponse(data=summary)
+    return BaseResponse(data=_serialize_analytics(summary))
 
 
 @router.get("/analytics/category-distribution", response_model=BaseResponse)
@@ -198,7 +215,7 @@ async def category_distribution(
     distribution = await service.category_distribution(
         current_user.family_id, year, month, category_id
     )
-    return BaseResponse(data=distribution)
+    return BaseResponse(data=_serialize_analytics(distribution))
 
 
 @router.get("/analytics/monthly-trend", response_model=BaseResponse)
@@ -209,7 +226,7 @@ async def monthly_trend(
 ):
     logger.info(f"GET /expenses/analytics/monthly-trend - year={year}")
     trend = await service.monthly_trend(current_user.family_id, year)
-    return BaseResponse(data=trend)
+    return BaseResponse(data=_serialize_analytics(trend))
 
 
 # ── Installments ──────────────────────────────────────────────────────────────
