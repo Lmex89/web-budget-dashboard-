@@ -9,11 +9,9 @@ from datetime import datetime
 from decimal import Decimal
 
 from loguru import logger
-from sqlalchemy import select, and_
-from sqlalchemy.orm import selectinload
 
 from app.domains.repositories.unit_of_work import IUnitOfWork
-from app.models import Installment, InstallmentStatus, Expense
+from app.models import Installment, InstallmentStatus
 
 
 class InstallmentService:
@@ -51,7 +49,6 @@ class InstallmentService:
                 due_date=due_date,
                 status=InstallmentStatus.PENDING,
             )
-            self.uow._session.add(installment)
             installments.append(installment)
             logger.debug(
                 f"Installment #{i}/{total_installments} for expense={expense_id}: "
@@ -59,25 +56,14 @@ class InstallmentService:
             )
             due_date = self._add_months(due_date, 1)
 
+        await self.uow.installments.create_many(installments)
         return installments
 
     async def get_overdue(self, family_id: str) -> list[Installment]:
         """Return all overdue installments for a family."""
         logger.debug(f"Querying overdue installments for family={family_id}")
         async with self.uow:
-            result = await self.uow._session.execute(
-                select(Installment)
-                .join(Expense)
-                .where(
-                    and_(
-                        Expense.family_id == family_id,
-                        Installment.due_date < datetime.utcnow(),
-                        Installment.status == InstallmentStatus.PENDING,
-                    )
-                )
-                .options(selectinload(Installment.expense))
-            )
-            return list(result.scalars().all())
+            return await self.uow.installments.get_overdue_by_family(family_id)
 
     @staticmethod
     def _add_months(source_date: datetime, months: int) -> datetime:

@@ -11,6 +11,9 @@ class SQLAlchemyAuditLogRepository(AuditLogRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    def _active_filter(self):
+        return AuditLog.deleted_at.is_(None)
+
     async def create(self, audit_log: AuditLog) -> AuditLog:
         logger.debug(f"Persisting audit log: entity={audit_log.entity_type}/{audit_log.entity_id}, action={audit_log.action}")
         try:

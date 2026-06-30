@@ -130,11 +130,6 @@ class InstallmentMisconfigurationException(ValidationException):
         super().__init__(message)
 
 
-class EmailAlreadyRegisteredException(ConflictException):
-    def __init__(self, email: str):
-        super().__init__(f"A user with email '{email}' is already registered.")
-
-
 #
 # ─── Serialization Helpers ───────────────────────────────────────────────────
 #

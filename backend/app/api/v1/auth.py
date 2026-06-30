@@ -14,6 +14,7 @@ from app.core.exceptions import (
     InvalidCredentialsException,
     EmailAlreadyRegisteredException,
     UnauthorizedException,
+    ForbiddenException,
 )
 from app.core.config import settings
 from app.models import User, Family
@@ -116,7 +117,6 @@ async def add_user_to_family(
 ):
     """Add a new user to the existing family (admin only)."""
     if not current_user.is_admin:
-        from app.core.exceptions import ForbiddenException
         raise ForbiddenException("Only family admins can add users.")
 
     logger.info(f"Adding user to family: email={data.email}, family={current_user.family_id}")

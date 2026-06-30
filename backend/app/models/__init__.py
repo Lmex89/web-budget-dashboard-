@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from sqlalchemy import String, DateTime, Boolean, ForeignKey, Integer, Numeric, Text, Enum, UniqueConstraint, Uuid, JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -107,10 +108,10 @@ class CreditCard(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_four_digits: Mapped[str | None] = mapped_column(String(4), nullable=True)
-    limit: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
+    limit: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     closing_day: Mapped[int] = mapped_column(Integer, nullable=False)  # Day of month
     due_day: Mapped[int] = mapped_column(Integer, nullable=False)  # Day of month
-    current_balance: Mapped[float] = mapped_column(Numeric(15, 2), default=0)
+    current_balance: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=0)
     family_id: Mapped[str] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
@@ -129,7 +130,7 @@ class Expense(Base):
     __tablename__ = "expenses"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    amount: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     payment_method: Mapped[PaymentMethod] = mapped_column(
@@ -168,7 +169,7 @@ class Installment(Base):
     credit_card_id: Mapped[str | None] = mapped_column(ForeignKey("credit_cards.id", ondelete="SET NULL"), nullable=True)
     installment_number: Mapped[int] = mapped_column(Integer, nullable=False)
     total_installments: Mapped[int] = mapped_column(Integer, nullable=False)
-    amount: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[InstallmentStatus] = mapped_column(Enum(InstallmentStatus), default=InstallmentStatus.PENDING)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -185,8 +186,8 @@ class Debt(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    original_amount: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
-    remaining_amount: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
+    original_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
+    remaining_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="USD")
     type: Mapped[DebtType] = mapped_column(Enum(DebtType), nullable=False)
     status: Mapped[DebtStatus] = mapped_column(Enum(DebtStatus), default=DebtStatus.ACTIVE)

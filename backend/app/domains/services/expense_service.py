@@ -7,6 +7,7 @@ DIP: Depends on IUnitOfWork abstraction, not concrete repositories.
 """
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import List, Optional
 
 from loguru import logger
@@ -171,12 +172,7 @@ class ExpenseService:
             return value.isoformat()
         if hasattr(value, 'value'):
             return value.value
-        if isinstance(value, float):
-            return str(value)
-        from decimal import Decimal
-        if isinstance(value, Decimal):
-            return str(value)
-        return value
+        return str(value) if isinstance(value, Decimal) else value
 
     async def delete(self, expense_id: str, family_id: str, user_id: str) -> bool:
         """Soft-delete an expense."""

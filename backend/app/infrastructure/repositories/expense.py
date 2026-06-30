@@ -189,7 +189,7 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             result = await self.db.execute(stmt)
             total = result.scalar()
             logger.debug(f"Monthly total for {year}-{month:02d}: {total}")
-            return {"total_expenses": float(total), "year": year, "month": month}
+            return {"total_expenses": total, "year": year, "month": month}
         except SQLAlchemyError:
             logger.exception("Database error aggregating monthly summary")
             raise AppException("ERR_DATABASE", "Failed to compute monthly summary.")
@@ -227,7 +227,7 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             rows = result.all()
             logger.debug(f"Category distribution has {len(rows)} categories")
             return [
-                {"category": row.name, "color": row.color, "amount": float(row.total)}
+                {"category": row.name, "color": row.color, "amount": row.total}
                 for row in rows
             ]
         except SQLAlchemyError:

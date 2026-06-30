@@ -4,6 +4,7 @@ from typing import Any
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
+from loguru import logger
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedException
 
@@ -30,4 +31,5 @@ def decode_access_token(token: str) -> dict[str, Any]:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
     except JWTError:
+        logger.exception("Failed to decode access token")
         raise UnauthorizedException("Invalid or expired token.")

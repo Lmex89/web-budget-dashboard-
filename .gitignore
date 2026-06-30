@@ -139,6 +139,9 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
+# opencode local tooling
+.opencode/
+
 # OS
 .DS_Store
 Thumbs.db

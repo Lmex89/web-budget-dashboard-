@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from decimal import Decimal
 from typing import List, Optional
 
 from app.models import Debt
@@ -26,5 +27,5 @@ class DebtRepository(ABC):
         pass
 
     @abstractmethod
-    async def update_remaining_amount(self, debt_id: str, new_amount: float) -> Debt:
+    async def update_remaining_amount(self, debt_id: str, new_amount: Decimal) -> Debt:
         pass

@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from loguru import logger
 from app.db.session import get_db
-from app.core.exceptions import UnauthorizedException
+from app.core.exceptions import UnauthorizedException, ForbiddenException
 from app.core.security import decode_access_token
 from app.models import User
 
@@ -32,7 +32,7 @@ async def get_current_user(
     try:
         result = await db.execute(
             select(User)
-            .where(User.id == user_id)
+            .where(User.id == user_id, User.deleted_at.is_(None))
             .options(selectinload(User.family))
         )
         user = result.scalar_one_or_none()
@@ -62,7 +62,6 @@ async def require_admin(
     current_user: User = Depends(get_current_active_user),
 ) -> User:
     if not current_user.is_admin:
-        from app.core.exceptions import ForbiddenException
         raise ForbiddenException("Admin privileges required.")
     logger.debug(f"Admin access granted: user={current_user.id}")
     return current_user

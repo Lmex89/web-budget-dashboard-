@@ -7,6 +7,7 @@ from app.domains.repositories.credit_card import CreditCardRepository
 from app.domains.repositories.debt import DebtRepository
 from app.domains.repositories.user import UserRepository
 from app.domains.repositories.audit_log import AuditLogRepository
+from app.domains.repositories.installment import InstallmentRepository
 
 
 class IUnitOfWork(ABC):
@@ -16,6 +17,7 @@ class IUnitOfWork(ABC):
     debts: DebtRepository
     users: UserRepository
     audit_logs: AuditLogRepository
+    installments: InstallmentRepository
 
     async def __aenter__(self) -> Self:
         return self

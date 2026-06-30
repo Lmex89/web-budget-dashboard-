@@ -1,5 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -83,7 +84,7 @@ class SQLAlchemyDebtRepository(DebtRepository):
             logger.exception(f"Database error soft-deleting debt {debt_id}")
             raise AppException("ERR_DATABASE", "Failed to delete debt.")
 
-    async def update_remaining_amount(self, debt_id: str, new_amount: float) -> Debt:
+    async def update_remaining_amount(self, debt_id: str, new_amount: Decimal) -> Debt:
         logger.info(f"Updating remaining amount: debt={debt_id}, new_amount={new_amount}")
         try:
             debt = await self.get_by_id(debt_id)

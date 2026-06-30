@@ -10,6 +10,7 @@ from app.infrastructure.repositories.credit_card import SQLAlchemyCreditCardRepo
 from app.infrastructure.repositories.debt import SQLAlchemyDebtRepository
 from app.infrastructure.repositories.user import SQLAlchemyUserRepository
 from app.infrastructure.repositories.audit_log import SQLAlchemyAuditLogRepository
+from app.infrastructure.repositories.installment import SQLAlchemyInstallmentRepository
 
 
 class SQLAlchemyUnitOfWork(IUnitOfWork):
@@ -21,6 +22,7 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
         self._debts = None
         self._users = None
         self._audit_logs = None
+        self._installments = None
 
     @property
     def expenses(self):
@@ -58,6 +60,12 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
             self._audit_logs = SQLAlchemyAuditLogRepository(self._session)
         return self._audit_logs
 
+    @property
+    def installments(self):
+        if self._installments is None:
+            self._installments = SQLAlchemyInstallmentRepository(self._session)
+        return self._installments
+
     async def __aenter__(self) -> Self:
         logger.debug("Unit of Work started (transaction begin)")
         return self
@@ -68,7 +76,6 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
             await self.rollback()
         else:
             await self.commit()
-        await self.close()
 
     async def commit(self) -> None:
         logger.debug("Committing transaction")
