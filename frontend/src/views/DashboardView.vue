@@ -7,6 +7,7 @@ import StatCard from '@/components/dashboard/StatCard.vue'
 import CategoryStackedBar from '@/components/dashboard/CategoryStackedBar.vue'
 import RecentExpensesCard from '@/components/dashboard/RecentExpensesCard.vue'
 import TopCategoriesCard from '@/components/dashboard/TopCategoriesCard.vue'
+import ExpensesPieChart from '@/components/dashboard/ExpensesPieChart.vue'
 import { useCurrency } from '@/composables/useCurrency'
 import { formatMonthName } from '@/utils/format'
 import type { CategoryBarSegment, DashboardExpense, DashboardSummary } from '@/types'
@@ -208,6 +209,16 @@ watch([currentMonth, currentYear, selectedCategory], () => {
           :error="error"
         />
       </div>
+    </div>
+
+    <!-- Pie chart: full width on the bottom -->
+    <div class="animation-delay-500">
+      <ExpensesPieChart
+        :segments="categorySegments"
+        :total-label="monthLabel"
+        :loading="loadingSegments"
+        :error="error"
+      />
     </div>
   </div>
 </template>
