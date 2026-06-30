@@ -71,7 +71,7 @@ const categorySegments = computed<CategoryBarSegment[]>(() => {
   const othersAmount = others.reduce((sum, s) => sum + s.amount, 0)
   return [
     ...visible.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 })),
-    { categoryId: 'others', categoryName: `Otros (${others.length})`, amount: othersAmount, percentage: total > 0 ? (othersAmount / total) * 100 : 0, color: 'var(--muted)' },
+    { categoryId: 'others', categoryName: `Otros (${others.length})`, amount: othersAmount, percentage: total > 0 ? (othersAmount / total) * 100 : 0, color: 'var(--ink-faint)' },
   ]
 })
 
