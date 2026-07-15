@@ -112,8 +112,12 @@ Migrations are managed using raw SQL files in `backend/migrations/sql/`:
 ./restore-db.sh backups/family_budget_20260715_020000.sql.gz
 
 # Cron job (daily at 2:00 AM)
+# Note: cron runs with minimal PATH, so set it at the top of crontab:
 crontab -e
-0 2 * * * /path/to/web-budget-dashboard-/backup-db.sh >> /path/to/web-budget-dashboard-/backups/cron.log 2>&1
+
+# Add these lines:
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0 2 * * * /home/lmex89/Documentos/probe/web-budget-dashboard-/backup-db.sh >> /home/lmex89/Documentos/probe/web-budget-dashboard-/backups/cron.log 2>&1
 ```
 
 ## Local Development
