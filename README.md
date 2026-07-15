@@ -117,7 +117,7 @@ crontab -e
 
 # Add these lines:
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-0 2 * * * /home/lmex89/Documentos/probe/web-budget-dashboard-/backup-db.sh >> /home/lmex89/Documentos/probe/web-budget-dashboard-/backups/cron.log 2>&1
+0 2 * * * /path/to/web-budget-dashboard-/backup-db.sh >> /path/to/web-budget-dashboard-/backups/cron.log 2>&1
 ```
 
 ## Local Development
