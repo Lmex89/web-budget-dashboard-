@@ -15,7 +15,7 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 - **Categories** — Organize spending with custom categories; edit category names inline.
 - **Credit Cards** — Track card limits, closing days, and balances.
 - **Debts** — Manage family loans and IOUs with counterparty tracking.
-- **Family Sharing** — Multi-user families with JWT-based authentication (30-day token expiry).
+- **Family Sharing** — Multi-user families with JWT-based authentication (Bearer token + HttpOnly cookie fallback, 30-day token expiry).
 
 ## Project Structure
 
@@ -98,6 +98,23 @@ Migrations are managed using raw SQL files in `backend/migrations/sql/`:
 - Files are numbered sequentially (001_, 002_, etc.)
 - Run with: `cd backend && python -m migrations.run_migrations`
 - MariaDB 10.11+ is the database engine
+
+## Database Backup & Restore
+
+```bash
+# Manual backup (dumps to ./backups/ with 30-day retention)
+./backup-db.sh
+
+# List available backups
+./restore-db.sh
+
+# Restore from a specific backup
+./restore-db.sh backups/family_budget_20260715_020000.sql.gz
+
+# Cron job (daily at 2:00 AM)
+crontab -e
+0 2 * * * /path/to/web-budget-dashboard-/backup-db.sh >> /path/to/web-budget-dashboard-/backups/cron.log 2>&1
+```
 
 ## Local Development
 

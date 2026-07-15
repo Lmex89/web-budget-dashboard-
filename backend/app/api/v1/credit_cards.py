@@ -8,7 +8,10 @@ from app.models import User
 from app.schemas.common import BaseResponse
 from app.schemas.credit_card import CreditCardCreate, CreditCardResponse
 
-router = APIRouter(prefix="/credit-cards", tags=["Credit Cards"])
+router = APIRouter(
+    prefix="/credit-cards", tags=["Credit Cards"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
 @router.get("", response_model=BaseResponse)

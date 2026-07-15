@@ -7,7 +7,7 @@ from loguru import logger
 from app.dependencies.auth import get_current_active_user, require_admin
 from app.dependencies.unit_of_work import get_unit_of_work
 from app.domains.repositories.unit_of_work import IUnitOfWork
-from app.schemas.user import UserCreate, UserLogin, UserResponse, UserAddToFamily
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UserAddToFamily, TokenResponse
 from app.schemas.common import BaseResponse
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.core.exceptions import (
@@ -19,10 +19,14 @@ from app.core.exceptions import (
 from app.core.config import settings
 from app.models import User, Family
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+auth_public_router = APIRouter(prefix="/auth", tags=["Auth"])
+auth_protected_router = APIRouter(
+    prefix="/auth", tags=["Auth"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
-@router.post("/register", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
+@auth_public_router.post("/register", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     data: UserCreate,
     uow: IUnitOfWork = Depends(get_unit_of_work),
@@ -51,7 +55,7 @@ async def register(
     return BaseResponse(data=UserResponse.model_validate(user).model_dump())
 
 
-@router.post("/login", response_model=BaseResponse)
+@auth_public_router.post("/login", response_model=BaseResponse)
 async def login(
     data: UserLogin,
     response: Response,
@@ -76,16 +80,18 @@ async def login(
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     logger.info(f"Login successful: id={user.id}, email={user.email}")
-    return BaseResponse(data=UserResponse.model_validate(user).model_dump())
+    user_resp = UserResponse.model_validate(user)
+    token_data = TokenResponse(access_token=token, token_type="bearer", user=user_resp)
+    return BaseResponse(data=token_data.model_dump())
 
 
-@router.get("/me", response_model=BaseResponse)
+@auth_protected_router.get("/me", response_model=BaseResponse)
 async def me(current_user: User = Depends(get_current_active_user)):
     """Return the authenticated user's profile."""
     return BaseResponse(data=UserResponse.model_validate(current_user).model_dump())
 
 
-@router.post("/logout", response_model=BaseResponse)
+@auth_public_router.post("/logout", response_model=BaseResponse)
 async def logout(response: Response):
     """Clear the JWT cookie."""
     response.delete_cookie("access_token")
@@ -94,7 +100,7 @@ async def logout(response: Response):
 
 # ── Family user management (admin only) ─────────────────────────────────────
 
-@router.get("/users", response_model=BaseResponse)
+@auth_protected_router.get("/users", response_model=BaseResponse)
 async def list_family_users(
     current_user: User = Depends(get_current_active_user),
     uow: IUnitOfWork = Depends(get_unit_of_work),
@@ -108,7 +114,7 @@ async def list_family_users(
         )
 
 
-@router.post("/users", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
+@auth_protected_router.post("/users", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def add_user_to_family(
     data: UserAddToFamily,
     current_user: User = Depends(get_current_active_user),

@@ -26,7 +26,10 @@ from app.schemas.expense import (
 from app.schemas.common import BaseResponse, PaginatedResponse
 from app.models import User
 
-router = APIRouter(prefix="/expenses", tags=["Expenses"])
+router = APIRouter(
+    prefix="/expenses", tags=["Expenses"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
 # ── CRUD ──────────────────────────────────────────────────────────────────────

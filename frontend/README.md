@@ -9,7 +9,7 @@ Vue 3 SPA for managing family finances.
 - **Styling:** Tailwind CSS 3 + DaisyUI 4
 - **State:** Pinia
 - **Routing:** Vue Router 4 (lazy-loaded views)
-- **HTTP:** Axios (with 401 interceptor for JWT expiry)
+- **HTTP:** Axios (with request interceptor for Bearer token + 401 response interceptor for token expiry)
 
 ## Project structure
 
@@ -41,8 +41,9 @@ src/
 - **expenses store**: Expense list, CRUD operations, analytics data
 
 ### Axios interceptors
-- 401 responses trigger automatic redirect to `/login`
-- Credentials (cookies) are sent with every request via `withCredentials: true`
+- Request interceptor injects `Authorization: Bearer <token>` from `localStorage`
+- 401 responses clear auth state (token + user)
+- Credentials (cookies) are sent with every request via `withCredentials: true` (cookie fallback)
 
 ### Lazy loading
 - All route views use dynamic `import()` for code-splitting

@@ -8,7 +8,10 @@ from app.models import User
 from app.schemas.common import BaseResponse
 from app.schemas.debt import DebtCreate, DebtResponse
 
-router = APIRouter(prefix="/debts", tags=["Debts"])
+router = APIRouter(
+    prefix="/debts", tags=["Debts"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
 @router.get("", response_model=BaseResponse)

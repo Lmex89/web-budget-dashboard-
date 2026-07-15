@@ -12,10 +12,6 @@ defineProps<{
 
 const { formatCurrency } = useCurrency()
 
-function segmentColor(segment: { colorIndex?: number; color?: string | null }): string {
-  if (segment.color) return segment.color
-  return `var(--cat-${segment.colorIndex || 1})`
-}
 </script>
 
 <template>
@@ -49,7 +45,7 @@ function segmentColor(segment: { colorIndex?: number; color?: string | null }): 
         <div class="flex items-center gap-3 min-w-0 flex-1">
           <span
             class="w-2.5 h-2.5 rounded-full shrink-0"
-            :style="{ backgroundColor: segmentColor(cat) }"
+            :style="{ backgroundColor: cat.color }"
           />
           <span class="text-[0.9375rem] font-medium truncate">{{ cat.categoryName }}</span>
         </div>

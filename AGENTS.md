@@ -21,6 +21,8 @@ Instructions for AI coding agents working in this repository.
 - Run backend locally (from `backend/`, venv active): `uvicorn app.main:app --reload`
 - Run frontend locally (from `frontend/`): `npm run dev`
 - Run backend tests (from `backend/`): `pytest`
+- Backup database: `./backup-db.sh`
+- Restore database: `./restore-db.sh <backup-file>`
 
 > **Local backend note:** All local backend commands require a `backend/.env` file. The default `DATABASE_URL` in `app/core/config.py` points to `localhost:3306`, but Docker Compose exposes MariaDB on host port `3308`. Copy `backend/.env.example` to `backend/.env` and adjust the port before running migrations or the dev server.
 >
@@ -112,7 +114,7 @@ All backend code **must** follow SOLID principles:
 
 ## Auth, API, and data-shape conventions
 
-- Authentication uses JWT stored in cookie `access_token` (see [backend/app/dependencies/auth.py](backend/app/dependencies/auth.py)).
+- Authentication uses JWT dual-mode: `Authorization: Bearer <token>` header (primary) + `access_token` HttpOnly cookie (fallback). Login returns `{ access_token, token_type, user }` in the JSON body. See [backend/app/dependencies/auth.py](backend/app/dependencies/auth.py).
 - Keep API response envelope consistency with schemas in [backend/app/schemas/common.py](backend/app/schemas/common.py).
 - Money values use Decimal/Numeric in domain and schema models (see [backend/app/models/__init__.py](backend/app/models/__init__.py) and [backend/app/schemas/expense.py](backend/app/schemas/expense.py)); avoid introducing float math in business logic.
 - Custom exception classes are organized by domain in [backend/app/core/exceptions.py](backend/app/core/exceptions.py).

@@ -1,4 +1,5 @@
 from fastapi import Depends, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -9,11 +10,19 @@ from app.core.exceptions import UnauthorizedException, ForbiddenException
 from app.core.security import decode_access_token
 from app.models import User
 
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
 async def get_current_user(
     request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    token = request.cookies.get("access_token")
+    token = None
+    if credentials and credentials.credentials:
+        token = credentials.credentials
+    if not token:
+        token = request.cookies.get("access_token")
     if not token:
         logger.warning("Authentication attempt without token")
         raise UnauthorizedException("Authentication token missing.")
@@ -28,7 +37,7 @@ async def get_current_user(
     except Exception:
         logger.exception("Token validation failed")
         raise UnauthorizedException("Invalid token.")
-    
+
     try:
         result = await db.execute(
             select(User)

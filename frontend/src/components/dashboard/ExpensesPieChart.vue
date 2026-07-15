@@ -29,28 +29,24 @@ const totalAmount = computed(() =>
   props.segments.reduce((sum, s) => sum + s.amount, 0)
 )
 
-function segmentColorValue(segment: { colorIndex?: number; color?: string | null }): string {
-  if (segment.color) return segment.color
-  const el = document.documentElement
-  const val = getComputedStyle(el).getPropertyValue(`--cat-${segment.colorIndex || 1}`).trim()
-  return val || '#0071e3'
-}
-
 const sortedSegments = computed(() =>
   [...props.segments].sort((a, b) => b.amount - a.amount)
 )
 
-const chartData = computed(() => ({
-  labels: sortedSegments.value.map(s => s.categoryName),
-  datasets: [
-    {
-      data: sortedSegments.value.map(s => s.amount),
-      backgroundColor: sortedSegments.value.map(s => segmentColorValue(s)),
-      borderWidth: 0,
-      hoverOffset: 10,
-    },
-  ],
-}))
+const chartData = computed(() => {
+  const sorted = sortedSegments.value
+  return {
+    labels: sorted.map(s => s.categoryName),
+    datasets: [
+      {
+        data: sorted.map(s => s.amount),
+        backgroundColor: sorted.map(s => s.color),
+        borderWidth: 0,
+        hoverOffset: 10,
+      },
+    ],
+  }
+})
 
 const chartOptions = computed(() => ({
   responsive: true,
@@ -124,7 +120,7 @@ function pct(amount: number): string {
           >
             <span
               class="w-2.5 h-2.5 rounded-full shrink-0"
-              :style="{ backgroundColor: segmentColorValue(segment) }"
+              :style="{ backgroundColor: segment.color }"
             />
             <div class="min-w-0 flex-1 flex items-baseline justify-between gap-2">
               <span class="text-sm text-muted truncate">

@@ -8,7 +8,7 @@ FastAPI application following Clean Architecture and SOLID principles.
 - **Framework:** FastAPI 0.115
 - **ORM:** SQLAlchemy 2.0 (async)
 - **Database:** MariaDB 10.11+
-- **Auth:** JWT (HttpOnly cookies) + bcrypt
+- **Auth:** JWT (Bearer header + HttpOnly cookie fallback) + bcrypt
 - **Validation:** Pydantic 2
 - **Logging:** Loguru
 - **Testing:** pytest + pytest-asyncio (no tests present yet)

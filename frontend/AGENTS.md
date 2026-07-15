@@ -115,7 +115,7 @@ Composables in `src/composables/`:
 
 ## Key conventions
 
-- **Auth**: JWT is HttpOnly cookie — JS cannot read it. The Pinia auth store calls `fetchCurrentUser()` on first load to determine auth state. The router guard uses `authStore.authReady` + `isAuthenticated`, NOT `document.cookie`.
+- **Auth**: Bearer token stored in `localStorage` (key `budget_access_token`), sent via axios request interceptor as `Authorization: Bearer <token>`. HttpOnly cookie retained as fallback. Pinia auth store calls `fetchCurrentUser()` on first load (auth header auto-attached). Router guard uses `authStore.authReady` + `isAuthenticated`.
 - **Axios 401 interceptor**: Clears auth state only (no `window.location.href` redirect to avoid reload loop). Redirect is handled by the router guard.
 - **Routes**: Lazy-loaded via dynamic `import()`. Protected routes use `beforeEach` guard. Each route has `meta.title` for document title.
 - **No comments in code** unless explicitly requested.

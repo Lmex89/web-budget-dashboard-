@@ -17,7 +17,7 @@ from app.core.exceptions import (
 )
 from app.core.middleware import SecurityHeadersMiddleware
 from app.api.v1.expenses import router as expenses_router
-from app.api.v1.auth import router as auth_router
+from app.api.v1.auth import auth_public_router, auth_protected_router
 from app.api.v1.categories import router as categories_router
 from app.api.v1.credit_cards import router as credit_cards_router
 from app.api.v1.debts import router as debts_router
@@ -57,7 +57,8 @@ def create_application() -> FastAPI:
     application.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
     application.add_exception_handler(Exception, generic_exception_handler)
 
-    application.include_router(auth_router, prefix="/api/v1")
+    application.include_router(auth_public_router, prefix="/api/v1")
+    application.include_router(auth_protected_router, prefix="/api/v1")
     application.include_router(expenses_router, prefix="/api/v1")
     application.include_router(categories_router, prefix="/api/v1")
     application.include_router(credit_cards_router, prefix="/api/v1")

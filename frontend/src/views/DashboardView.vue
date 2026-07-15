@@ -10,6 +10,7 @@ import TopCategoriesCard from '@/components/dashboard/TopCategoriesCard.vue'
 import ExpensesPieChart from '@/components/dashboard/ExpensesPieChart.vue'
 import { useCurrency } from '@/composables/useCurrency'
 import { formatMonthName } from '@/utils/format'
+import { CATEGORY_COLORS_LIGHT } from '@/utils/colors'
 import type { CategoryBarSegment, DashboardExpense, DashboardSummary } from '@/types'
 
 const expenseStore = useExpenseStore()
@@ -50,25 +51,21 @@ const MAX_VISIBLE_SEGMENTS = 5
 const categorySegments = computed<CategoryBarSegment[]>(() => {
   const dist = expenseStore.categoryDistribution
   const catMap = new Map(categoryStore.categories.map((c) => [c.name.toLowerCase(), c]))
-  const segments: CategoryBarSegment[] = dist.map((d) => {
+  const segments: CategoryBarSegment[] = dist.map((d, i) => {
     const cat = catMap.get(d.category.toLowerCase())
-    return { categoryId: cat?.id || d.category, categoryName: d.category, amount: d.amount, percentage: 0, color: d.color }
+    return { categoryId: cat?.id || d.category, categoryName: d.category, amount: d.amount, percentage: 0, color: CATEGORY_COLORS_LIGHT[i % CATEGORY_COLORS_LIGHT.length] }
   })
   segments.sort((a, b) => b.amount - a.amount)
-  const segmentsWithIndex = segments.map((s, i) => ({
-    ...s,
-    colorIndex: ((i % 5) + 1) as 1 | 2 | 3 | 4 | 5,
-  }))
-  const total = segmentsWithIndex.reduce((sum, s) => sum + s.amount, 0)
-  if (segmentsWithIndex.length <= MAX_VISIBLE_SEGMENTS + 1) {
-    return segmentsWithIndex.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 }))
+  const total = segments.reduce((sum, s) => sum + s.amount, 0)
+  if (segments.length <= MAX_VISIBLE_SEGMENTS + 1) {
+    return segments.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 }))
   }
-  const visible = segmentsWithIndex.slice(0, MAX_VISIBLE_SEGMENTS)
-  const others = segmentsWithIndex.slice(MAX_VISIBLE_SEGMENTS)
+  const visible = segments.slice(0, MAX_VISIBLE_SEGMENTS)
+  const others = segments.slice(MAX_VISIBLE_SEGMENTS)
   const othersAmount = others.reduce((sum, s) => sum + s.amount, 0)
   return [
     ...visible.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 })),
-    { categoryId: 'others', categoryName: `Otros (${others.length})`, amount: othersAmount, percentage: total > 0 ? (othersAmount / total) * 100 : 0, color: 'var(--ink-faint)' },
+    { categoryId: 'others', categoryName: `Otros (${others.length})`, amount: othersAmount, percentage: total > 0 ? (othersAmount / total) * 100 : 0, color: '#8e8e93' },
   ]
 })
 

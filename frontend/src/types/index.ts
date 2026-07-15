@@ -163,8 +163,13 @@ export interface CategoryBarSegment {
   categoryName: string
   amount: number
   percentage: number
-  colorIndex?: 1 | 2 | 3 | 4 | 5
-  color?: string | null
+  color: string
+}
+
+export interface TokenResponse {
+  access_token: string
+  token_type: string
+  user: User
 }
 
 export interface StatCardData {

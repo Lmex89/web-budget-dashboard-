@@ -8,7 +8,10 @@ from app.models import User
 from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate
 from app.schemas.common import BaseResponse
 
-router = APIRouter(prefix="/categories", tags=["Categories"])
+router = APIRouter(
+    prefix="/categories", tags=["Categories"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
 @router.get("", response_model=BaseResponse)

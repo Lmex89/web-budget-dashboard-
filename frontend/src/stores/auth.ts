@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { shallowRef, ref, computed } from 'vue'
-import type { User } from '@/types'
-import api from '@/services/api'
+import type { User, TokenResponse } from '@/types'
+import api, { setStoredToken, clearStoredToken } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = shallowRef<User | null>(null)
@@ -12,7 +12,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     const { data } = await api.post('/api/v1/auth/login', { email, password })
     if (data.success) {
-      user.value = data.data
+      const tokenData = data.data as TokenResponse
+      setStoredToken(tokenData.access_token)
+      user.value = tokenData.user
     }
   }
 
@@ -39,6 +41,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function clearAuth() {
     user.value = null
+    clearStoredToken()
   }
 
   return {

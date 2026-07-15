@@ -29,6 +29,13 @@ export default {
         'cat-3': 'var(--cat-3)',
         'cat-4': 'var(--cat-4)',
         'cat-5': 'var(--cat-5)',
+        'cat-6': 'var(--cat-6)',
+        'cat-7': 'var(--cat-7)',
+        'cat-8': 'var(--cat-8)',
+        'cat-9': 'var(--cat-9)',
+        'cat-10': 'var(--cat-10)',
+        'cat-11': 'var(--cat-11)',
+        'cat-12': 'var(--cat-12)',
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"Helvetica Neue"', 'sans-serif'],

@@ -148,6 +148,7 @@ Thumbs.db
 
 # MySQL dumps
 *.dump
+backups/
 
 # Docker
 .env.docker

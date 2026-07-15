@@ -32,6 +32,20 @@
     --cat-4-light: #f3e8fa;
     --cat-5: #ec4899;
     --cat-5-light: #fce7f3;
+    --cat-6: #0ea5e9;
+    --cat-6-light: #e0f2fe;
+    --cat-7: #f59e0b;
+    --cat-7-light: #fef3c7;
+    --cat-8: #14b8a6;
+    --cat-8-light: #ccfbf1;
+    --cat-9: #8b5cf6;
+    --cat-9-light: #ede9fe;
+    --cat-10: #f43f5e;
+    --cat-10-light: #ffe4e6;
+    --cat-11: #06b6d4;
+    --cat-11-light: #cffafe;
+    --cat-12: #84cc16;
+    --cat-12-light: #ecfccb;
 
     --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
@@ -77,6 +91,20 @@
       --cat-4-light: #2e1a3a;
       --cat-5: #f472b6;
       --cat-5-light: #3a1a28;
+      --cat-6: #38bdf8;
+      --cat-6-light: #0c2a3a;
+      --cat-7: #fbbf24;
+      --cat-7-light: #3a2e0c;
+      --cat-8: #2dd4bf;
+      --cat-8-light: #0c3a32;
+      --cat-9: #a78bfa;
+      --cat-9-light: #1e0c3a;
+      --cat-10: #fb7185;
+      --cat-10-light: #3a0c14;
+      --cat-11: #22d3ee;
+      --cat-11-light: #0c2e3a;
+      --cat-12: #a3e635;
+      --cat-12-light: #1e3a0c;
 
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
       --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -323,6 +351,8 @@
   .frosted {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
   }
 }
 
