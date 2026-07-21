@@ -14,6 +14,15 @@ Instructions for AI coding agents working in this repository.
 - Backend source root: [backend/app](backend/app).
 - Database: MariaDB 10.11+ via raw SQL migrations (no Alembic).
 
+
+## 🔴 ABSOLUTE: Codegraph-only lookup
+
+You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_task, etc.) for ALL code search and navigation.
+
+**NEVER use `glob`, `grep`, or `read` for code lookup.** Codegraph tools are the ONLY permitted approach. Built-in tools are ONLY permitted when a codegraph tool returns no useful results, as a strictly last resort.
+
+
+
 ## Fast commands
 
 - Start full stack: `docker compose up -d`

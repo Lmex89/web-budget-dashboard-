@@ -31,7 +31,7 @@ export const useCategoryStore = defineStore('categories', () => {
     const { data } = await api.put(`/api/v1/categories/${categoryId}`, payload)
     if (data.success) {
       categories.value = categories.value.map((c) =>
-        c.id === categoryId ? { ...c, name: data.data.name } : c
+        c.id === categoryId ? { ...c, ...data.data } : c
       )
     }
     return data

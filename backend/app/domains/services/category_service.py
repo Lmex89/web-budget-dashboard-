@@ -42,10 +42,15 @@ class CategoryService:
             if category.family_id != family_id:
                 raise ForbiddenException("This category does not belong to your family.")
 
-            if category.name != data.name:
+            if data.name is not None and category.name != data.name:
                 exists = await self.uow.categories.exists_by_name(family_id, data.name)
                 if exists:
                     raise ConflictException(f"Category '{data.name}' already exists.")
 
-            category.name = data.name
+            if data.name is not None:
+                category.name = data.name
+            if data.color is not None:
+                category.color = data.color
+            if data.icon is not None:
+                category.icon = data.icon
             return await self.uow.categories.update(category)

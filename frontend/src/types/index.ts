@@ -83,7 +83,9 @@ export interface CreateCategoryPayload {
 }
 
 export interface UpdateCategoryPayload {
-  name: string
+  name?: string
+  color?: string | null
+  icon?: string | null
 }
 
 export interface CreditCardCreatePayload {

@@ -37,6 +37,8 @@ const { form, showForm, errorMessage, toggleForm, handleSubmit } = useForm<Categ
 interface EditingState {
   categoryId: string
   name: string
+  color: string
+  icon: string
   saving: boolean
   error: string | null
 }
@@ -44,10 +46,12 @@ interface EditingState {
 const editing = ref<EditingState | null>(null)
 const editInputRef = ref<HTMLInputElement | null>(null)
 
-function startEdit(categoryId: string, currentName: string) {
+function startEdit(categoryId: string, currentName: string, currentColor: string | null, currentIcon: string | null) {
   editing.value = {
     categoryId,
     name: currentName,
+    color: currentColor || '#0071e3',
+    icon: currentIcon || '',
     saving: false,
     error: null,
   }
@@ -72,7 +76,11 @@ async function saveEdit(categoryId: string) {
   state.saving = true
   state.error = null
   try {
-    const payload: UpdateCategoryPayload = { name: trimmed }
+    const payload: UpdateCategoryPayload = {
+      name: trimmed,
+      color: state.color || null,
+      icon: (state.icon || '').trim() || null,
+    }
     await categoryStore.updateCategory(categoryId, payload)
     editing.value = null
   } catch (e: unknown) {
@@ -176,26 +184,54 @@ onMounted(async () => {
         class="p-4 flex items-center gap-4 animate-fade-up"
       >
         <div
-          class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
+          class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 overflow-hidden"
           :style="{ backgroundColor: (cat.color || '#a8a29e') + '20' }"
         >
-          {{ cat.icon || '🏷️' }}
+          <span class="truncate px-1">{{ cat.icon || '🏷️' }}</span>
         </div>
         <div class="min-w-0 flex-1">
-          <div v-if="editing?.categoryId === cat.id" class="space-y-1">
-            <input
-              ref="editInputRef"
-              v-model="editing.name"
-              type="text"
-              class="eb-input w-full text-sm"
-              maxlength="100"
-              :disabled="editing.saving"
-              @keydown="onEditKeydown($event, cat.id)"
-              @blur="saveEdit(cat.id)"
-            />
+          <div v-if="editing?.categoryId === cat.id" class="space-y-2 w-full">
+            <div class="flex items-center gap-2">
+              <input
+                ref="editInputRef"
+                v-model="editing.name"
+                type="text"
+                class="eb-input text-sm flex-1 min-w-0"
+                maxlength="100"
+                :disabled="editing.saving"
+                placeholder="Name"
+                @keydown="onEditKeydown($event, cat.id)"
+              />
+              <input
+                v-model="editing.color"
+                type="color"
+                class="w-9 h-9 p-0.5 bg-paper-2 border border-rule rounded-lg cursor-pointer shrink-0"
+                :disabled="editing.saving"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                v-model="editing.icon"
+                type="text"
+                class="eb-input text-sm flex-1"
+                maxlength="50"
+                placeholder="Icon e.g. 🍕"
+                :disabled="editing.saving"
+              />
+              <button
+                class="eb-btn eb-btn-primary text-xs px-3 py-1 shrink-0"
+                :disabled="editing.saving"
+                @click="saveEdit(cat.id)"
+              >Save</button>
+              <button
+                class="eb-btn eb-btn-ghost text-xs px-3 py-1 shrink-0"
+                :disabled="editing.saving"
+                @click="cancelEdit"
+              >Cancel</button>
+            </div>
             <p v-if="editing.error" class="text-xs text-danger">{{ editing.error }}</p>
           </div>
-          <div v-else class="group cursor-pointer" @click="startEdit(cat.id, cat.name)">
+          <div v-else class="group cursor-pointer" @click="startEdit(cat.id, cat.name, cat.color, cat.icon)">
             <h3 class="font-semibold truncate group-hover:text-accent transition-colors">{{ cat.name }}</h3>
             <p class="text-xs text-muted mt-0.5 uppercase tracking-wide">{{ cat.color || 'No color' }}</p>
           </div>
