@@ -132,7 +132,7 @@ class Expense(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     payment_method: Mapped[PaymentMethod] = mapped_column(
         Enum(PaymentMethod, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
@@ -170,7 +170,7 @@ class Installment(Base):
     installment_number: Mapped[int] = mapped_column(Integer, nullable=False)
     total_installments: Mapped[int] = mapped_column(Integer, nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     status: Mapped[InstallmentStatus] = mapped_column(Enum(InstallmentStatus), default=InstallmentStatus.PENDING)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

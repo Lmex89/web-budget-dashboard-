@@ -13,6 +13,7 @@ Instructions for AI coding agents working in this repository.
 - Primary project documentation: [README.md](README.md).
 - Backend source root: [backend/app](backend/app).
 - Database: MariaDB 10.11+ via raw SQL migrations (no Alembic).
+- Timezone: America/Merida (CST, UTC-6). Set via `TZ` and `--default-time-zone` in `docker-compose.yml` + `TIMEZONE` in `backend/app/core/config.py`. Expense `date` and installment `due_date` use `DATETIME` (no conversion). Audit columns (`created_at`, `updated_at`) use `TIMESTAMP` (converted to local time by MariaDB).
 
 
 ## 🔴 ABSOLUTE: Codegraph-only lookup
