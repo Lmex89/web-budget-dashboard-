@@ -65,6 +65,9 @@ const chartOptions = computed(() => ({
       displayColors: true,
       boxPadding: 4,
       callbacks: {
+        title(ctx: { label?: string }[]) {
+          return ctx[0]?.label ?? ''
+        },
         label(ctx: { parsed: number; dataset: { data: number[] } }) {
           const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0)
           const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : '0.0'
@@ -107,8 +110,16 @@ function pct(amount: number): string {
     </div>
 
     <div v-else class="flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
-      <div class="w-48 h-48 sm:w-56 sm:h-56 shrink-0">
+      <div class="relative w-48 h-48 sm:w-56 sm:h-56 shrink-0">
         <Doughnut :data="chartData" :options="chartOptions" />
+        <div
+          class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+        >
+          <span class="text-[10px] uppercase tracking-wide text-muted">Total</span>
+          <span class="text-base sm:text-lg font-semibold tabular-nums text-ink">
+            {{ formatCurrency(totalAmount) }}
+          </span>
+        </div>
       </div>
 
       <div class="flex-1 w-full min-w-0">

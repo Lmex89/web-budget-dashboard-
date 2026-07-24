@@ -26,7 +26,7 @@ async function loadData() {
   await Promise.all([
     expenseStore.fetchMonthlySummary(currentYear.value, currentMonth.value, categoryId),
     expenseStore.fetchCategoryDistribution(currentYear.value, currentMonth.value, categoryId),
-    expenseStore.fetchExpenses({ page_size: 5 }),
+    expenseStore.fetchRecentExpenses({ page_size: 5 }),
   ])
 }
 
@@ -149,9 +149,9 @@ watch([currentMonth, currentYear, selectedCategory], loadData)
           </router-link>
         </div>
 
-        <div v-if="expenseStore.expenses.length > 0" class="divide-y divide-rule">
+        <div v-if="expenseStore.recentExpenses.length > 0" class="divide-y divide-rule">
           <div
-            v-for="expense in expenseStore.expenses"
+            v-for="expense in expenseStore.recentExpenses"
             :key="expense.id"
             class="flex items-center justify-between py-3.5 gap-4"
           >

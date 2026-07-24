@@ -10,8 +10,6 @@ const navigation = [
   { name: 'Dashboard', path: '/' },
   { name: 'Expenses', path: '/expenses' },
   { name: 'Categories', path: '/categories' },
-  { name: 'Credit Cards', path: '/credit-cards' },
-  { name: 'Debts', path: '/debts' },
   { name: 'Settings', path: '/settings' },
 ]
 </script>

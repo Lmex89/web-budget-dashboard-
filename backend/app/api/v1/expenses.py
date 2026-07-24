@@ -37,7 +37,7 @@ router = APIRouter(
 @router.get("", response_model=PaginatedResponse)
 async def list_expenses(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(25, ge=1, le=100),
     category_id: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None, description="ISO format date"),
     end_date: Optional[str] = Query(None, description="ISO format date"),

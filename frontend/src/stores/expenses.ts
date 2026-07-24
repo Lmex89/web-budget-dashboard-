@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { shallowRef } from 'vue'
+import { shallowRef, ref } from 'vue'
 import type { ExpenseListItem, MonthlySummary, CategoryDistribution, CreateExpensePayload, UpdateExpensePayload } from '@/types'
 import api from '@/services/api'
 
@@ -13,14 +13,38 @@ interface FetchExpensesParams {
 
 export const useExpenseStore = defineStore('expenses', () => {
   const expenses = shallowRef<ExpenseListItem[]>([])
+  const recentExpenses = shallowRef<ExpenseListItem[]>([])
   const monthlySummary = shallowRef<MonthlySummary | null>(null)
   const categoryDistribution = shallowRef<CategoryDistribution[]>([])
+  const total = ref(0)
+  const currentPage = ref(1)
+  const pageSize = ref(25)
+  const totalPages = ref(0)
+  const filterCategory = ref('')
+  const filterStartDate = ref('')
+  const filterEndDate = ref('')
 
   async function fetchExpenses(params?: FetchExpensesParams) {
     const { data } = await api.get('/api/v1/expenses', { params })
     if (data.success) {
       expenses.value = data.data
+      total.value = data.total || 0
+      currentPage.value = data.page || 1
+      totalPages.value = data.total_pages || 0
     }
+  }
+
+  async function fetchRecentExpenses(params?: FetchExpensesParams) {
+    const { data } = await api.get('/api/v1/expenses', { params })
+    if (data.success) {
+      recentExpenses.value = data.data
+    }
+  }
+
+  function clearFilterState() {
+    filterCategory.value = ''
+    filterStartDate.value = ''
+    filterEndDate.value = ''
   }
 
   async function createExpense(payload: CreateExpensePayload) {
@@ -58,9 +82,19 @@ export const useExpenseStore = defineStore('expenses', () => {
 
   return {
     expenses,
+    recentExpenses,
     monthlySummary,
     categoryDistribution,
+    total,
+    currentPage,
+    pageSize,
+    totalPages,
+    filterCategory,
+    filterStartDate,
+    filterEndDate,
     fetchExpenses,
+    fetchRecentExpenses,
+    clearFilterState,
     createExpense,
     updateExpense,
     deleteExpense,

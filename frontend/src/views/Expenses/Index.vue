@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
 import { useCreditCardStore } from '@/stores/creditCards'
@@ -16,9 +16,9 @@ const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
 const creditCardStore = useCreditCardStore()
 
-const filterCategory = ref('')
-const filterStartDate = ref('')
-const filterEndDate = ref('')
+const filterCategory = ref(expenseStore.filterCategory || '')
+const filterStartDate = ref(expenseStore.filterStartDate || '')
+const filterEndDate = ref(expenseStore.filterEndDate || '')
 const editingId = ref<string | null>(null)
 
 function openDatePicker(e: MouseEvent) {
@@ -87,27 +87,55 @@ function cancelForm() {
 
 const showCreditCardField = computed(() => form.value.payment_method === 'credit')
 
-const hasActiveFilters = computed(
-  () => filterCategory.value || filterStartDate.value || filterEndDate.value
-)
-
 const formTitle = computed(() => editingId.value ? 'Edit expense' : 'New expense')
 const submitLabel = computed(() => editingId.value ? 'Update expense' : 'Save expense')
 
-async function fetchExpenses() {
+async function fetchExpenses(page?: number) {
   await expenseStore.fetchExpenses({
+    page: page || expenseStore.currentPage,
+    page_size: expenseStore.pageSize,
     category_id: filterCategory.value || undefined,
     start_date: filterStartDate.value || undefined,
     end_date: filterEndDate.value || undefined,
   })
 }
 
-function clearFilters() {
+function applyFilters() {
+  expenseStore.filterCategory = filterCategory.value
+  expenseStore.filterStartDate = filterStartDate.value
+  expenseStore.filterEndDate = filterEndDate.value
+  fetchExpenses(1)
+}
+
+async function clearFilters() {
   filterCategory.value = ''
   filterStartDate.value = ''
   filterEndDate.value = ''
-  fetchExpenses()
+  await fetchExpenses(1)
+  expenseStore.clearFilterState()
 }
+
+function goToPage(page: number) {
+  fetchExpenses(page)
+}
+
+const visiblePages = computed(() => {
+  const tp = expenseStore.totalPages
+  if (tp <= 7) return Array.from({ length: tp }, (_, i) => i + 1)
+  const cp = expenseStore.currentPage
+  const pages: (number | string)[] = [1]
+  if (cp > 3) pages.push('...')
+  for (let i = Math.max(2, cp - 1); i <= Math.min(tp - 1, cp + 1); i++) {
+    pages.push(i)
+  }
+  if (cp < tp - 2) pages.push('...')
+  pages.push(tp)
+  return pages
+})
+
+const hasActiveFilters = computed(
+  () => expenseStore.filterCategory || expenseStore.filterStartDate || expenseStore.filterEndDate
+)
 
 async function exportCSV() {
   const params: Record<string, string> = {}
@@ -124,10 +152,6 @@ async function exportCSV() {
   link.remove()
   window.URL.revokeObjectURL(url)
 }
-
-watch([filterCategory, filterStartDate, filterEndDate], () => {
-  fetchExpenses()
-})
 
 onMounted(() => {
   fetchExpenses()
@@ -174,6 +198,12 @@ async function handleDelete(id: string) {
           <label class="eb-label text-xs">To</label>
           <input v-model="filterEndDate" type="date" class="eb-input w-40" @click="openDatePicker" />
         </div>
+        <button
+          class="eb-btn eb-btn-primary text-sm"
+          @click="applyFilters"
+        >
+          Apply
+        </button>
         <button
           v-if="hasActiveFilters"
           class="eb-btn eb-btn-ghost text-sm"
@@ -321,6 +351,34 @@ async function handleDelete(id: string) {
         </tbody>
       </table>
     </PaperCard>
+
+    <nav v-if="expenseStore.totalPages > 1" class="flex items-center justify-center gap-1 animate-fade-up" aria-label="Pagination">
+      <button
+        class="eb-btn eb-btn-ghost text-sm px-2"
+        :disabled="expenseStore.currentPage <= 1"
+        @click="goToPage(expenseStore.currentPage - 1)"
+      >
+        Prev
+      </button>
+      <template v-for="p in visiblePages" :key="p">
+        <span v-if="p === '...'" class="px-1 text-muted text-sm">...</span>
+        <button
+          v-else
+          class="eb-btn text-sm px-3"
+          :class="p === expenseStore.currentPage ? 'eb-btn-primary' : 'eb-btn-ghost'"
+          @click="goToPage(p as number)"
+        >
+          {{ p }}
+        </button>
+      </template>
+      <button
+        class="eb-btn eb-btn-ghost text-sm px-2"
+        :disabled="expenseStore.currentPage >= expenseStore.totalPages"
+        @click="goToPage(expenseStore.currentPage + 1)"
+      >
+        Next
+      </button>
+    </nav>
 
     <EmptyState
       v-if="expenseStore.expenses.length === 0"

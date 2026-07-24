@@ -14,7 +14,7 @@ class ExpenseRepository(ABC):
         self,
         family_id: str,
         page: int = 1,
-        page_size: int = 20,
+        page_size: int = 25,
         category_id: Optional[str] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,

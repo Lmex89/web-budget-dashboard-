@@ -23,18 +23,6 @@ const nav = [
     icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.671 9.671c.404.404.997.607 1.591.607h4.318A2.25 2.25 0 0022 19.05V14.75a2.25 2.25 0 00-.659-1.591l-6.997-6.997A2.25 2.25 0 0012.568 4.5l-2.95-2.95A2.25 2.25 0 007.068 3H9.568z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 9h.008v.008H6V9z" /></svg>`,
   },
   {
-    name: 'Credit Cards',
-    short: 'Cards',
-    path: '/credit-cards',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-12.75-4.5v9.75c0 1.036.84 1.875 1.875 1.875h16.5A1.875 1.875 0 0021.375 18V9m-19.5 0V5.625A2.625 2.625 0 014.875 3h14.25a2.625 2.625 0 012.625 2.625V9m-19.5 0h19.5" /></svg>`,
-  },
-  {
-    name: 'Debts',
-    short: 'Debts',
-    path: '/debts',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>`,
-  },
-  {
     name: 'Family',
     short: 'Family',
     path: '/settings',
@@ -47,7 +35,7 @@ const nav = [
   <nav
     class="lg:hidden fixed bottom-0 inset-x-0 z-40 frosted bg-paper/80 border-t border-rule pb-safe"
   >
-    <div class="grid grid-cols-6 h-16">
+    <div class="grid grid-cols-4 h-16">
       <router-link
         v-for="item in nav"
         :key="item.path"

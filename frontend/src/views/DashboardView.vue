@@ -72,7 +72,7 @@ const categorySegments = computed<CategoryBarSegment[]>(() => {
 const topCategories = computed<CategoryBarSegment[]>(() => categorySegments.value.slice(0, 6))
 
 const recentExpenses = computed<DashboardExpense[]>(() =>
-  expenseStore.expenses.map((e) => ({
+  expenseStore.recentExpenses.map((e) => ({
     id: e.id,
     description: e.description || '',
     amount: typeof e.amount === 'string' ? parseFloat(e.amount) : e.amount,
@@ -99,7 +99,7 @@ async function loadAll() {
     await Promise.all([
       expenseStore.fetchMonthlySummary(currentYear.value, currentMonth.value, catId),
       expenseStore.fetchCategoryDistribution(currentYear.value, currentMonth.value, catId),
-      expenseStore.fetchExpenses({ page: 1, page_size: 5, start_date: start, end_date: end, category_id: catId }),
+      expenseStore.fetchRecentExpenses({ page: 1, page_size: 5, start_date: start, end_date: end, category_id: catId }),
     ])
   } catch {
     error.value = 'Failed to load dashboard data'
