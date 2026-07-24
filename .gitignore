@@ -141,6 +141,7 @@ pnpm-debug.log*
 
 # opencode local tooling
 .opencode/
+.codegraph/
 
 # OS
 .DS_Store
