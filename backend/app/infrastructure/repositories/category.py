@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,8 +7,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from loguru import logger
 from app.domains.repositories.category import CategoryRepository
-from app.models import Category
-from app.core.exceptions import AppException
+from app.models import Category, Expense
+from app.core.exceptions import AppException, NotFoundException
 
 class SQLAlchemyCategoryRepository(CategoryRepository):
     def __init__(self, db: AsyncSession):
@@ -82,3 +83,34 @@ class SQLAlchemyCategoryRepository(CategoryRepository):
         except SQLAlchemyError:
             logger.exception(f"Database error updating category {category.id}")
             raise AppException("ERR_DATABASE", "Failed to update category.")
+
+    async def delete(self, category_id: str) -> bool:
+        logger.warning(f"Soft-deleting category: id={category_id}")
+        try:
+            category = await self.get_by_id(category_id)
+            if not category:
+                raise NotFoundException("Category", category_id)
+            category.deleted_at = datetime.utcnow()
+            await self.db.flush()
+            logger.info(f"Category soft-deleted: id={category_id}")
+            return True
+        except NotFoundException:
+            raise
+        except SQLAlchemyError:
+            logger.exception(f"Database error soft-deleting category {category_id}")
+            raise AppException("ERR_DATABASE", "Failed to delete category.")
+
+    async def has_expenses(self, category_id: str) -> bool:
+        logger.debug(f"Checking expenses for category: {category_id}")
+        try:
+            result = await self.db.execute(
+                select(func.count(Expense.id)).where(
+                    Expense.category_id == category_id,
+                    Expense.deleted_at.is_(None),
+                )
+            )
+            count = result.scalar_one()
+            return count > 0
+        except SQLAlchemyError:
+            logger.exception(f"Database error checking expenses for category {category_id}")
+            raise AppException("ERR_DATABASE", "Failed to check category expenses.")

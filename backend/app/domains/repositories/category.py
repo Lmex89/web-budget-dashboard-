@@ -24,3 +24,11 @@ class CategoryRepository(ABC):
     @abstractmethod
     async def update(self, category: Category) -> Category:
         pass
+
+    @abstractmethod
+    async def delete(self, category_id: str) -> bool:
+        pass
+
+    @abstractmethod
+    async def has_expenses(self, category_id: str) -> bool:
+        pass

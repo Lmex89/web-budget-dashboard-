@@ -45,3 +45,14 @@ async def update_category(
     logger.info(f"PUT /categories/{category_id} - family={current_user.family_id}, name={data.name}")
     category = await service.update(category_id, data, current_user.family_id)
     return BaseResponse(data=CategoryResponse.model_validate(category).model_dump())
+
+
+@router.delete("/{category_id}", response_model=BaseResponse)
+async def delete_category(
+    category_id: str,
+    current_user: User = Depends(get_current_active_user),
+    service: CategoryService = Depends(get_category_service),
+):
+    logger.info(f"DELETE /categories/{category_id} - family={current_user.family_id}")
+    await service.delete(category_id, current_user.family_id)
+    return BaseResponse(data=None)

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Doughnut } from 'vue-chartjs'
+import type { Chart as ChartJSChart } from 'chart.js'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -21,7 +22,13 @@ const props = defineProps<{
   error?: string | null
 }>()
 
+const emit = defineEmits<{
+  (e: 'segmentClick', categoryId: string): void
+}>()
+
 const { formatCurrency } = useCurrency()
+
+const chartRef = ref<{ chart: ChartJSChart } | null>(null)
 
 const hasData = computed(() => props.segments.length > 0)
 
@@ -82,6 +89,22 @@ function pct(amount: number): string {
   if (!totalAmount.value) return '0.0'
   return ((amount / totalAmount.value) * 100).toFixed(1)
 }
+
+function handleLegendClick(categoryId: string) {
+  emit('segmentClick', categoryId)
+}
+
+function handleChartClick(event: MouseEvent) {
+  const chart = chartRef.value?.chart
+  if (!chart) return
+  const elements = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true)
+  if (!elements.length) return
+  const index = elements[0].index
+  const segment = sortedSegments.value[index]
+  if (segment) {
+    emit('segmentClick', segment.categoryId)
+  }
+}
 </script>
 
 <template>
@@ -111,7 +134,7 @@ function pct(amount: number): string {
 
     <div v-else class="flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
       <div class="relative w-48 h-48 sm:w-56 sm:h-56 shrink-0">
-        <Doughnut :data="chartData" :options="chartOptions" />
+        <Doughnut ref="chartRef" :data="chartData" :options="chartOptions" @click="handleChartClick" />
         <div
           class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
         >
@@ -127,7 +150,8 @@ function pct(amount: number): string {
           <div
             v-for="segment in sortedSegments"
             :key="segment.categoryId"
-            class="flex items-center gap-3 min-h-[36px]"
+            class="flex items-center gap-3 min-h-[36px] cursor-pointer"
+            @click="handleLegendClick(segment.categoryId)"
           >
             <span
               class="w-2.5 h-2.5 rounded-full shrink-0"

@@ -161,7 +161,8 @@ frontend/src/
 │   ├── categories.ts  # Category list/create/update
 │   ├── creditCards.ts # Credit card list/create
 │   ├── debts.ts       # Debt list/create
-│   └── expenses.ts    # Expense CRUD + analytics
+│   ├── expenses.ts    # Expense CRUD + analytics
+│   └── auditLogs.ts   # Audit log list with filters
 ├── composables/
 │   ├── useCurrency.ts  # Intl.NumberFormat currency formatter
 │   └── useForm.ts      # Reusable form state management
@@ -177,6 +178,7 @@ frontend/src/
 │   ├── CreditCards/
 │   ├── Debts/
 │   ├── Settings/
+│   ├── Logs/          # Audit log table with entity/action filters
 │       └── DashboardView.vue  # Mobile-first overview (uses real expense + category stores)
 ├── utils/
 │   └── format.ts      # Currency, date, month formatting

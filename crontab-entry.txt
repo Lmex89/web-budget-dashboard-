@@ -1,0 +1,1 @@
+0 3 * * * /home/lmex89/Documentos/probe/web-budget-dashboard-/backup-db.fish >> /home/lmex89/Documentos/probe/web-budget-dashboard-/backups/cron.log 2>&1

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
 import { useCreditCardStore } from '@/stores/creditCards'
@@ -15,8 +16,10 @@ import type { CreateExpensePayload, UpdateExpensePayload, ExpenseListItem } from
 const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
 const creditCardStore = useCreditCardStore()
+const route = useRoute()
 
-const filterCategory = ref(expenseStore.filterCategory || '')
+const queryCategoryId = typeof route.query.category_id === 'string' ? route.query.category_id : ''
+const filterCategory = ref(queryCategoryId || expenseStore.filterCategory || '')
 const filterStartDate = ref(expenseStore.filterStartDate || '')
 const filterEndDate = ref(expenseStore.filterEndDate || '')
 const editingId = ref<string | null>(null)
@@ -154,7 +157,11 @@ async function exportCSV() {
 }
 
 onMounted(() => {
-  fetchExpenses()
+  if (queryCategoryId) {
+    applyFilters()
+  } else {
+    fetchExpenses()
+  }
   categoryStore.fetchCategories()
   creditCardStore.fetchCreditCards()
 })

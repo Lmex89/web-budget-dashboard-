@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Expenses', path: '/expenses' },
   { name: 'Categories', path: '/categories' },
   { name: 'Settings', path: '/settings' },
+  { name: 'Logs', path: '/logs' },
 ]
 </script>
 

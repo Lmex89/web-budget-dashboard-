@@ -45,6 +45,7 @@ interface EditingState {
 
 const editing = ref<EditingState | null>(null)
 const editInputRef = ref<HTMLInputElement | null>(null)
+const deleting = ref<Record<string, boolean>>({})
 
 function startEdit(categoryId: string, currentName: string, currentColor: string | null, currentIcon: string | null) {
   editing.value = {
@@ -96,6 +97,19 @@ function onEditKeydown(event: KeyboardEvent, categoryId: string) {
     saveEdit(categoryId)
   } else if (event.key === 'Escape') {
     cancelEdit()
+  }
+}
+
+async function handleDelete(categoryId: string, name: string) {
+  if (!window.confirm(`Delete category "${name}"?`)) return
+  deleting.value[categoryId] = true
+  try {
+    await categoryStore.deleteCategory(categoryId)
+  } catch (e: unknown) {
+    const err = e as { response?: { data?: { error?: { message?: string } } } }
+    alert(err?.response?.data?.error?.message || 'Failed to delete category')
+  } finally {
+    deleting.value[categoryId] = false
   }
 }
 
@@ -236,6 +250,13 @@ onMounted(async () => {
             <p class="text-xs text-muted mt-0.5 uppercase tracking-wide">{{ cat.color || 'No color' }}</p>
           </div>
         </div>
+        <button
+          class="text-xs text-danger hover:underline shrink-0 px-1"
+          :disabled="deleting[cat.id]"
+          @click="handleDelete(cat.id, cat.name)"
+        >
+          Delete
+        </button>
       </PaperCard>
     </div>
   </div>

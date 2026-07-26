@@ -101,6 +101,14 @@ class CategoryNotFoundException(NotFoundException):
         super().__init__("Category", category_id)
 
 
+class CategoryInUseException(ConflictException):
+    def __init__(self, category_name: str):
+        super().__init__(
+            f"Cannot delete category '{category_name}' because it has expenses. "
+            "Reassign or delete them first."
+        )
+
+
 class ExpenseNotFoundException(NotFoundException):
     def __init__(self, expense_id: str):
         super().__init__("Expense", expense_id)

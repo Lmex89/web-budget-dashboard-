@@ -11,6 +11,10 @@ defineProps<{
   error?: string | null
 }>()
 
+const emit = defineEmits<{
+  (e: 'delete', id: string): void
+}>()
+
 const { formatCurrency } = useCurrency()
 </script>
 
@@ -61,9 +65,17 @@ const { formatCurrency } = useCurrency()
             {{ expense.authorName }} · {{ formatShortDate(expense.date) }}
           </p>
         </div>
-        <span class="text-[0.9375rem] font-semibold tabular-nums text-ink shrink-0">
-          {{ formatCurrency(expense.amount) }}
-        </span>
+        <div class="text-right shrink-0">
+          <span class="text-[0.9375rem] font-semibold tabular-nums text-ink block">
+            {{ formatCurrency(expense.amount) }}
+          </span>
+          <button
+            class="text-xs text-danger hover:underline mt-1"
+            @click="emit('delete', expense.id)"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   </PaperCard>

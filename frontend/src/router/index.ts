@@ -57,6 +57,12 @@ const router = createRouter({
           component: () => import('@/views/Settings/Index.vue'),
           meta: { title: 'Family' },
         },
+        {
+          path: 'logs',
+          name: 'Logs',
+          component: () => import('@/views/Logs/Index.vue'),
+          meta: { title: 'Audit logs' },
+        },
       ],
     },
   ],

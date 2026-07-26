@@ -180,3 +180,21 @@ export interface StatCardData {
   caption: string
   tone: 'ink' | 'accent' | 'sage'
 }
+
+export interface AuditLog {
+  id: string
+  entity_type: string
+  entity_id: string
+  action: 'create' | 'update' | 'delete' | string
+  old_values: Record<string, unknown> | null
+  new_values: Record<string, unknown> | null
+  user_name: string
+  created_at: string
+}
+
+export interface FetchAuditLogsParams {
+  page?: number
+  page_size?: number
+  entity_type?: string
+  action?: string
+}

@@ -67,12 +67,13 @@ Each domain concern gets its own focused service class:
 
 | Service | Responsibility |
 |---|---|
-| `CategoryService` | Family-scoped category list, create, and update |
+| `CategoryService` | Family-scoped category list, create, update, and delete |
 | `CreditCardService` | Family-scoped credit card list and create |
 | `DebtService` | Family-scoped debt list and create |
 | `ExpenseService` | CRUD for expenses, validation, family-scoping, CSV export |
 | `InstallmentService` | Installment generation, overdue detection, status tracking |
 | `AnalyticsService` | Monthly summaries, category distributions, trends, card utilization |
+| `AuditLogService` | Family-scoped audit log list with entity/action filters |
 
 Service rules:
 - Every service receives `IUnitOfWork` via constructor injection.
@@ -130,6 +131,7 @@ All backend code **must** follow SOLID principles:
 - Custom exception classes are organized by domain in [backend/app/core/exceptions.py](backend/app/core/exceptions.py).
 - Debt API/frontend payloads should preserve backend field names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) to avoid adapter drift in `frontend/src/stores/debts.ts` and debt views.
 - Category names can be edited inline from the Categories route; the backend enforces family ownership and name uniqueness on update.
+- Category delete is a soft delete and is blocked if the category still has active expenses. Reassign or delete those expenses first.
 
 ## Git commit conventions (required)
 
@@ -206,9 +208,11 @@ BREAKING CHANGE: expense list response now wraps data under `items` key
 - Frontend prod Docker: [frontend/Dockerfile.prod](frontend/Dockerfile.prod) + [frontend/nginx.conf](frontend/nginx.conf)
 - Expense API flow (good vertical slice): [backend/app/api/v1/expenses.py](backend/app/api/v1/expenses.py)
 - Debt API flow (list/create): [backend/app/api/v1/debts.py](backend/app/api/v1/debts.py)
-- Category API flow (list/create/update): [backend/app/api/v1/categories.py](backend/app/api/v1/categories.py)
+- Category API flow (list/create/update/delete): [backend/app/api/v1/categories.py](backend/app/api/v1/categories.py)
+- Audit log API flow (list): [backend/app/api/v1/audit_logs.py](backend/app/api/v1/audit_logs.py)
 - Service layer entry point: [backend/app/dependencies/services.py](backend/app/dependencies/services.py)
 - Domain models (all entities): [backend/app/models/\_\_init\_\_.py](backend/app/models/__init__.py)
 - Exception hierarchy: [backend/app/core/exceptions.py](backend/app/core/exceptions.py)
 - Dashboard view: [frontend/src/views/DashboardView.vue](frontend/src/views/DashboardView.vue)
 - Dashboard components: [frontend/src/components/dashboard/](frontend/src/components/dashboard/)
+- Audit log view: [frontend/src/views/Logs/Index.vue](frontend/src/views/Logs/Index.vue)

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
 import { useAuthStore } from '@/stores/auth'
@@ -16,6 +17,7 @@ import type { CategoryBarSegment, DashboardExpense, DashboardSummary } from '@/t
 const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
+const router = useRouter()
 const { formatCurrency } = useCurrency()
 
 const now = new Date()
@@ -116,6 +118,16 @@ onMounted(async () => {
 watch([currentMonth, currentYear, selectedCategory], () => {
   loadAll()
 })
+
+async function handleRecentExpenseDelete(id: string) {
+  await expenseStore.deleteExpense(id)
+  await loadAll()
+}
+
+function handleSegmentClick(categoryId: string) {
+  if (!categoryId || categoryId === 'others') return
+  router.push({ path: '/expenses', query: { category_id: categoryId } })
+}
 </script>
 
 <template>
@@ -193,6 +205,7 @@ watch([currentMonth, currentYear, selectedCategory], () => {
           :expenses="recentExpenses"
           :loading="loadingExpenses"
           :error="error"
+          @delete="handleRecentExpenseDelete"
         />
       </div>
       <div class="animation-delay-400">
@@ -210,6 +223,7 @@ watch([currentMonth, currentYear, selectedCategory], () => {
         :total-label="monthLabel"
         :loading="loadingSegments"
         :error="error"
+        @segment-click="handleSegmentClick"
       />
     </div>
   </div>

@@ -2,7 +2,7 @@
 
 from loguru import logger
 
-from app.core.exceptions import CategoryNotFoundException, ConflictException, ForbiddenException
+from app.core.exceptions import CategoryInUseException, CategoryNotFoundException, ConflictException, ForbiddenException
 from app.domains.repositories.unit_of_work import IUnitOfWork
 from app.models import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate
@@ -54,3 +54,17 @@ class CategoryService:
             if data.icon is not None:
                 category.icon = data.icon
             return await self.uow.categories.update(category)
+
+    async def delete(self, category_id: str, family_id: str) -> bool:
+        logger.info(f"Deleting category id={category_id}, family={family_id}")
+        async with self.uow:
+            category = await self.uow.categories.get_by_id(category_id)
+            if not category:
+                raise CategoryNotFoundException(category_id)
+            if category.family_id != family_id:
+                raise ForbiddenException("This category does not belong to your family.")
+
+            if await self.uow.categories.has_expenses(category_id):
+                raise CategoryInUseException(category.name)
+
+            return await self.uow.categories.delete(category_id)

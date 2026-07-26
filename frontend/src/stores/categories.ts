@@ -37,11 +37,20 @@ export const useCategoryStore = defineStore('categories', () => {
     return data
   }
 
+  async function deleteCategory(categoryId: string) {
+    const { data } = await api.delete(`/api/v1/categories/${categoryId}`)
+    if (data.success) {
+      categories.value = categories.value.filter((c) => c.id !== categoryId)
+    }
+    return data
+  }
+
   return {
     categories,
     loading,
     fetchCategories,
     createCategory,
     updateCategory,
+    deleteCategory,
   }
 })
