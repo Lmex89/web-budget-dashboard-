@@ -91,6 +91,14 @@ Located in `src/components/ui/`:
 | `EmptyState` | `title`, `description?`, slots `icon`, `action` | Empty data placeholder |
 | `FormField` | `label`, `forId?`, `error?` | Label + slot for input |
 
+### Feature-specific components
+
+Located in `src/components/expenses/`:
+
+| Component | Props | Purpose |
+|---|---|---|
+| `CategoryFilter` | `selectedIds` (v-model), `categories` | Multi-select checkbox chip group for the expense list category filter |
+
 ### Formatting utilities
 
 Use `src/utils/format.ts` for all data formatting:
@@ -120,6 +128,7 @@ Composables in `src/composables/`:
 - **Routes**: Lazy-loaded via dynamic `import()`. Protected routes use `beforeEach` guard. Each route has `meta.title` for document title.
 - **No comments in code** unless explicitly requested.
 - **Debt API shape**: Keep debt request/response fields aligned with backend schema names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) instead of introducing frontend-only aliases.
+- **Expense category filter**: The expenses view uses `CategoryFilter` to select multiple categories. Selected IDs are joined with commas and sent as the `category_id` query parameter; the backend already supports single or multiple comma-separated category IDs.
 
 ## Reactivity and TypeScript conventions
 
@@ -161,13 +170,14 @@ frontend/src/
 │   ├── categories.ts  # Category list/create/update
 │   ├── creditCards.ts # Credit card list/create
 │   ├── debts.ts       # Debt list/create
-│   ├── expenses.ts    # Expense CRUD + analytics
+│   ├── expenses.ts    # Expense CRUD + analytics; `filterCategoryIds` holds multi-select category filter state
 │   └── auditLogs.ts   # Audit log list with filters
 ├── composables/
 │   ├── useCurrency.ts  # Intl.NumberFormat currency formatter
 │   └── useForm.ts      # Reusable form state management
 ├── components/
 │   ├── dashboard/     # StatCard, CategoryStackedBar, RecentExpensesCard, TopCategoriesCard
+│   ├── expenses/      # CategoryFilter (multi-select category filter for expense list)
 │   ├── layout/        # MainLayout, MobileHeader, BottomNav, Sidebar
 │   └── ui/            # PageHeader, PaperCard, MetricCard, EmptyState, FormField
 ├── views/

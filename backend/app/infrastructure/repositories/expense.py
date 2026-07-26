@@ -18,6 +18,13 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
     def _active_filter(self):
         return Expense.deleted_at.is_(None)
 
+    @staticmethod
+    def _category_filter(category_id: Optional[str]) -> Optional[List[str]]:
+        if not category_id:
+            return None
+        ids = [c.strip() for c in category_id.split(",") if c.strip()]
+        return ids if ids else None
+
     async def get_by_id(self, expense_id: str) -> Optional[Expense]:
         logger.debug(f"Querying expense by id: {expense_id}")
         try:
@@ -54,9 +61,13 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
     ) -> tuple[List[Expense], int]:
         conditions = [Expense.family_id == family_id, self._active_filter()]
 
-        if category_id:
-            conditions.append(Expense.category_id == category_id)
-            logger.debug(f"Filtering by category: {category_id}")
+        category_ids = self._category_filter(category_id)
+        if category_ids:
+            if len(category_ids) == 1:
+                conditions.append(Expense.category_id == category_ids[0])
+            else:
+                conditions.append(Expense.category_id.in_(category_ids))
+            logger.debug(f"Filtering by category ids: {category_ids}")
         if start_date:
             conditions.append(Expense.date >= datetime.fromisoformat(start_date))
             logger.debug(f"Filtering from date: {start_date}")
@@ -102,8 +113,12 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         end_date: Optional[str] = None,
     ) -> List[Expense]:
         conditions = [Expense.family_id == family_id, self._active_filter()]
-        if category_id:
-            conditions.append(Expense.category_id == category_id)
+        category_ids = self._category_filter(category_id)
+        if category_ids:
+            if len(category_ids) == 1:
+                conditions.append(Expense.category_id == category_ids[0])
+            else:
+                conditions.append(Expense.category_id.in_(category_ids))
         if start_date:
             conditions.append(Expense.date >= datetime.fromisoformat(start_date))
         if end_date:

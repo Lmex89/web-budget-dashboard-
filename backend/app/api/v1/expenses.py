@@ -38,7 +38,7 @@ router = APIRouter(
 async def list_expenses(
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=100),
-    category_id: Optional[str] = Query(None),
+    category_id: Optional[str] = Query(None, description="Single category id or comma-separated list"),
     start_date: Optional[str] = Query(None, description="ISO format date"),
     end_date: Optional[str] = Query(None, description="ISO format date"),
     credit_card_id: Optional[str] = Query(None),
@@ -134,7 +134,7 @@ async def delete_expense(
 
 @router.get("/export/csv")
 async def export_expenses_csv(
-    category_id: Optional[str] = Query(None),
+    category_id: Optional[str] = Query(None, description="Single category id or comma-separated list"),
     start_date: Optional[str] = Query(None, description="ISO format date"),
     end_date: Optional[str] = Query(None, description="ISO format date"),
     current_user: User = Depends(get_current_active_user),

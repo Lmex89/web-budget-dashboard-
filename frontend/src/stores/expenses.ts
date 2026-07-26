@@ -20,7 +20,7 @@ export const useExpenseStore = defineStore('expenses', () => {
   const currentPage = ref(1)
   const pageSize = ref(25)
   const totalPages = ref(0)
-  const filterCategory = ref('')
+  const filterCategoryIds = ref<string[]>([])
   const filterStartDate = ref('')
   const filterEndDate = ref('')
 
@@ -42,7 +42,7 @@ export const useExpenseStore = defineStore('expenses', () => {
   }
 
   function clearFilterState() {
-    filterCategory.value = ''
+    filterCategoryIds.value = []
     filterStartDate.value = ''
     filterEndDate.value = ''
   }
@@ -89,7 +89,7 @@ export const useExpenseStore = defineStore('expenses', () => {
     currentPage,
     pageSize,
     totalPages,
-    filterCategory,
+    filterCategoryIds,
     filterStartDate,
     filterEndDate,
     fetchExpenses,

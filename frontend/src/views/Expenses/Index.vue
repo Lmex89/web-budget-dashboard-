@@ -8,6 +8,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import PaperCard from '@/components/ui/PaperCard.vue'
 import FormField from '@/components/ui/FormField.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import CategoryFilter from '@/components/expenses/CategoryFilter.vue'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { useForm } from '@/composables/useForm'
 import api from '@/services/api'
@@ -18,8 +19,23 @@ const categoryStore = useCategoryStore()
 const creditCardStore = useCreditCardStore()
 const route = useRoute()
 
-const queryCategoryId = typeof route.query.category_id === 'string' ? route.query.category_id : ''
-const filterCategory = ref(queryCategoryId || expenseStore.filterCategory || '')
+function parseQueryCategoryIds(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((v) => (v ? String(v).split(',') : []))
+      .map((id) => id.trim())
+      .filter(Boolean)
+  }
+  if (typeof value === 'string' && value) {
+    return value.split(',').map((id) => id.trim()).filter(Boolean)
+  }
+  return []
+}
+
+const queryCategoryIds = parseQueryCategoryIds(route.query.category_id)
+const selectedCategoryIds = ref<string[]>(
+  queryCategoryIds.length > 0 ? queryCategoryIds : [...expenseStore.filterCategoryIds]
+)
 const filterStartDate = ref(expenseStore.filterStartDate || '')
 const filterEndDate = ref(expenseStore.filterEndDate || '')
 const editingId = ref<string | null>(null)
@@ -97,21 +113,21 @@ async function fetchExpenses(page?: number) {
   await expenseStore.fetchExpenses({
     page: page || expenseStore.currentPage,
     page_size: expenseStore.pageSize,
-    category_id: filterCategory.value || undefined,
+    category_id: selectedCategoryIds.value.join(',') || undefined,
     start_date: filterStartDate.value || undefined,
     end_date: filterEndDate.value || undefined,
   })
 }
 
 function applyFilters() {
-  expenseStore.filterCategory = filterCategory.value
+  expenseStore.filterCategoryIds = [...selectedCategoryIds.value]
   expenseStore.filterStartDate = filterStartDate.value
   expenseStore.filterEndDate = filterEndDate.value
   fetchExpenses(1)
 }
 
 async function clearFilters() {
-  filterCategory.value = ''
+  selectedCategoryIds.value = []
   filterStartDate.value = ''
   filterEndDate.value = ''
   await fetchExpenses(1)
@@ -137,12 +153,12 @@ const visiblePages = computed(() => {
 })
 
 const hasActiveFilters = computed(
-  () => expenseStore.filterCategory || expenseStore.filterStartDate || expenseStore.filterEndDate
+  () => selectedCategoryIds.value.length > 0 || filterStartDate.value || filterEndDate.value
 )
 
 async function exportCSV() {
   const params: Record<string, string> = {}
-  if (filterCategory.value) params.category_id = filterCategory.value
+  if (selectedCategoryIds.value.length > 0) params.category_id = selectedCategoryIds.value.join(',')
   if (filterStartDate.value) params.start_date = filterStartDate.value
   if (filterEndDate.value) params.end_date = filterEndDate.value
   const { data } = await api.get('/api/v1/expenses/export/csv', { params, responseType: 'blob' })
@@ -157,7 +173,7 @@ async function exportCSV() {
 }
 
 onMounted(() => {
-  if (queryCategoryId) {
+  if (queryCategoryIds.length > 0) {
     applyFilters()
   } else {
     fetchExpenses()
@@ -182,21 +198,12 @@ async function handleDelete(id: string) {
       </template>
     </PageHeader>
 
-    <PaperCard class="p-4" :class="showForm ? 'hidden md:block' : ''">
+    <PaperCard class="p-4 space-y-4" :class="showForm ? 'hidden md:block' : ''">
+      <CategoryFilter
+        v-model:selectedIds="selectedCategoryIds"
+        :categories="categoryStore.categories"
+      />
       <div class="flex flex-wrap items-end gap-3">
-        <div class="flex flex-col gap-1">
-          <label class="eb-label text-xs">Category</label>
-          <select v-model="filterCategory" class="eb-select w-40">
-            <option value="">All categories</option>
-            <option
-              v-for="cat in categoryStore.categories"
-              :key="cat.id"
-              :value="cat.id"
-            >
-              {{ cat.name }}
-            </option>
-          </select>
-        </div>
         <div class="flex flex-col gap-1">
           <label class="eb-label text-xs">From</label>
           <input v-model="filterStartDate" type="date" class="eb-input w-40" @click="openDatePicker" />

@@ -132,6 +132,7 @@ All backend code **must** follow SOLID principles:
 - Debt API/frontend payloads should preserve backend field names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) to avoid adapter drift in `frontend/src/stores/debts.ts` and debt views.
 - Category names can be edited inline from the Categories route; the backend enforces family ownership and name uniqueness on update.
 - Category delete is a soft delete and is blocked if the category still has active expenses. Reassign or delete those expenses first.
+- Expense list filtering supports one or many categories: the backend treats `category_id` as a single id or a comma-separated list; the frontend renders this as a multi-select checkbox chip group via `frontend/src/components/expenses/CategoryFilter.vue`.
 
 ## Git commit conventions (required)
 

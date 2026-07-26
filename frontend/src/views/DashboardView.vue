@@ -67,7 +67,13 @@ const categorySegments = computed<CategoryBarSegment[]>(() => {
   const othersAmount = others.reduce((sum, s) => sum + s.amount, 0)
   return [
     ...visible.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 })),
-    { categoryId: 'others', categoryName: `Otros (${others.length})`, amount: othersAmount, percentage: total > 0 ? (othersAmount / total) * 100 : 0, color: '#8e8e93' },
+    {
+      categoryId: others.map((s) => s.categoryId).join(','),
+      categoryName: `Otros (${others.length})`,
+      amount: othersAmount,
+      percentage: total > 0 ? (othersAmount / total) * 100 : 0,
+      color: '#8e8e93',
+    },
   ]
 })
 
@@ -125,7 +131,7 @@ async function handleRecentExpenseDelete(id: string) {
 }
 
 function handleSegmentClick(categoryId: string) {
-  if (!categoryId || categoryId === 'others') return
+  if (!categoryId) return
   router.push({ path: '/expenses', query: { category_id: categoryId } })
 }
 </script>
