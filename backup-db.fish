@@ -95,7 +95,7 @@ log_info "Target container: $CONTAINER_NAME"
 # ── Build output path ────────────────────────────────────────────────────────
 set -l BACKUP_DIR "$SCRIPT_DIR/backups"
 set -l TIMESTAMP (date +"%Y%m%d_%H%M%S")
-set -l FILENAME "${MYSQL_DATABASE}_${TIMESTAMP}.sql.gz"
+set -l FILENAME "$MYSQL_DATABASE"_"$TIMESTAMP.sql.gz"
 set -l OUTPUT_PATH "$BACKUP_DIR/$FILENAME"
 set -l RETENTION_DAYS 30
 
@@ -120,7 +120,7 @@ log_info "Backup created successfully: $FILENAME ($FILE_SIZE)"
 
 # ── Retention cleanup ────────────────────────────────────────────────────────
 set -l DELETED_COUNT 0
-for old_file in (find "$BACKUP_DIR" -name "${MYSQL_DATABASE}_*.sql.gz" -mtime +"$RETENTION_DAYS")
+for old_file in (find "$BACKUP_DIR" -name "$MYSQL_DATABASE"'_*.sql.gz' -mtime +"$RETENTION_DAYS")
     log_debug "Removing expired backup: "(basename "$old_file")
     set DELETED_COUNT (math "$DELETED_COUNT + 1")
     rm -f "$old_file"
