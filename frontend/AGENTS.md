@@ -74,6 +74,7 @@ Use these instead of DaisyUI classes for new UI (DaisyUI was removed):
 - **Mobile**: Sticky `MobileHeader` (top) + fixed `BottomNav` (6-tab bar). Main content has `pb-28` to clear the tab bar.
 - **Desktop (lg+)**: Editorial `Sidebar` (left, 220px wide) with dot nav links. No bottom nav.
 - `MainLayout.vue` composes `Sidebar`, `MobileHeader`, and `BottomNav`.
+- `BottomNav.vue` renders SVG icons and labels as native template nodes (no `v-html`) for iOS Safari reliability, and uses exact/prefix path matching so parent tabs stay active on nested routes.
 
 ### Shared components
 

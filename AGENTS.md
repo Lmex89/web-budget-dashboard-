@@ -133,6 +133,7 @@ All backend code **must** follow SOLID principles:
 - Category names can be edited inline from the Categories route; the backend enforces family ownership and name uniqueness on update.
 - Category delete is a soft delete and is blocked if the category still has active expenses. Reassign or delete those expenses first.
 - Expense list filtering supports one or many categories: the backend treats `category_id` as a single id or a comma-separated list; the frontend renders this as a multi-select checkbox chip group via `frontend/src/components/expenses/CategoryFilter.vue`.
+- Mobile bottom navigation in `frontend/src/components/layout/BottomNav.vue` must render icons/labels as native Vue template nodes (no `v-html` HTML injection) to keep all tabs visible on iOS Safari.
 
 ## Git commit conventions (required)
 
