@@ -205,12 +205,12 @@ async function handleDelete(id: string) {
       />
       <div class="flex flex-wrap items-end gap-3">
         <div class="flex flex-col gap-1 min-w-0">
-          <label class="eb-label text-xs">From</label>
-          <input v-model="filterStartDate" type="date" class="eb-input w-full sm:w-40" @click="openDatePicker" />
+          <label for="filter-start-date" class="eb-label text-xs">From</label>
+          <input id="filter-start-date" v-model="filterStartDate" type="date" class="eb-input w-full sm:w-40" @click="openDatePicker" />
         </div>
         <div class="flex flex-col gap-1 min-w-0">
-          <label class="eb-label text-xs">To</label>
-          <input v-model="filterEndDate" type="date" class="eb-input w-full sm:w-40" @click="openDatePicker" />
+          <label for="filter-end-date" class="eb-label text-xs">To</label>
+          <input id="filter-end-date" v-model="filterEndDate" type="date" class="eb-input w-full sm:w-40" @click="openDatePicker" />
         </div>
         <button
           class="eb-btn eb-btn-primary text-sm"
@@ -318,13 +318,13 @@ async function handleDelete(id: string) {
           <p class="text-sm font-semibold tabular-nums">{{ formatCurrency(expense.amount) }}</p>
           <div class="flex items-center justify-end gap-2 mt-1">
             <button
-              class="text-xs font-semibold text-accent hover:underline"
+              class="text-xs font-semibold text-accent px-2 py-1 rounded-lg hover:bg-accent-light"
               @click="startEdit(expense)"
             >
               Edit
             </button>
             <button
-              class="text-xs text-danger hover:underline"
+              class="text-xs text-danger px-2 py-1 rounded-lg hover:bg-danger-light"
               @click="handleDelete(expense.id)"
             >
               Delete

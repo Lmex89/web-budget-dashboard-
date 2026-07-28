@@ -58,7 +58,7 @@ Use these instead of DaisyUI classes for new UI (DaisyUI was removed):
 | Class | Purpose |
 |---|---|
 | `.eb-btn` + `.eb-btn-primary` / `.eb-btn-ghost` / `.eb-btn-accent` / `.eb-btn-danger` | Buttons |
-| `.eb-input` / `.eb-select` | Form inputs |
+| `.eb-input` / `.eb-select` | Form inputs (custom-styled; `-webkit-appearance: none` so iOS/Safari uses the same padding/border as desktop) |
 | `.eb-label` | Form labels (uppercase, tracking-wide) |
 | `.paper-card` / `.paper-card-filled` | Cards with border/shadow |
 | `.chip` + `.chip-sage` / `.chip-accent` / `.chip-warn` / `.chip-muted` / `.chip-danger` | Status badges |
@@ -122,6 +122,9 @@ Composables in `src/composables/`:
 - Bottom nav uses `pb-safe` utility for iPhone safe-area inset.
 - Route `meta.title` is used for document title and mobile header.
 - Date filter inputs on the expenses page use responsive widths (`w-full sm:w-40`) and `min-w-0` on flex children to prevent iOS Safari overflow.
+- `.eb-input` and `.eb-select` reset `-webkit-appearance: none` and include a custom SVG caret for selects so mobile Safari/Chrome render the same padding/border as desktop instead of the cramped native controls.
+- Filter selects in the Audit logs view follow the same responsive width pattern (`w-full sm:w-40`) as the expenses date filters so they stack cleanly on narrow screens.
+- Inline action links in mobile card rows (e.g., Edit/Delete in expenses, Delete in categories) get `px-2 py-1` and a rounded hover background to increase the tappable area without switching to full button styling.
 
 ## Key conventions
 

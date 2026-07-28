@@ -95,16 +95,16 @@ onMounted(() => {
     <PaperCard class="p-4">
       <div class="flex flex-wrap items-end gap-3">
         <div class="flex flex-col gap-1">
-          <label class="eb-label text-xs">Entity</label>
-          <select v-model="auditLogStore.filterEntityType" class="eb-select w-40">
+          <label for="logs-entity" class="eb-label text-xs">Entity</label>
+          <select id="logs-entity" v-model="auditLogStore.filterEntityType" class="eb-select w-full sm:w-40">
             <option v-for="opt in entityTypeOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
           </select>
         </div>
         <div class="flex flex-col gap-1">
-          <label class="eb-label text-xs">Action</label>
-          <select v-model="auditLogStore.filterAction" class="eb-select w-40">
+          <label for="logs-action" class="eb-label text-xs">Action</label>
+          <select id="logs-action" v-model="auditLogStore.filterAction" class="eb-select w-full sm:w-40">
             <option v-for="opt in actionOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </option>

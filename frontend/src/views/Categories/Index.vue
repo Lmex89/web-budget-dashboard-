@@ -251,7 +251,7 @@ onMounted(async () => {
           </div>
         </div>
         <button
-          class="text-xs text-danger hover:underline shrink-0 px-1"
+          class="text-xs text-danger shrink-0 px-2 py-1 rounded-lg hover:bg-danger-light"
           :disabled="deleting[cat.id]"
           @click="handleDelete(cat.id, cat.name)"
         >
