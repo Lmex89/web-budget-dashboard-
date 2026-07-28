@@ -204,13 +204,13 @@ async function handleDelete(id: string) {
         :categories="categoryStore.categories"
       />
       <div class="flex flex-wrap items-end gap-3">
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1 min-w-0">
           <label class="eb-label text-xs">From</label>
-          <input v-model="filterStartDate" type="date" class="eb-input w-40" @click="openDatePicker" />
+          <input v-model="filterStartDate" type="date" class="eb-input w-full sm:w-40" @click="openDatePicker" />
         </div>
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1 min-w-0">
           <label class="eb-label text-xs">To</label>
-          <input v-model="filterEndDate" type="date" class="eb-input w-40" @click="openDatePicker" />
+          <input v-model="filterEndDate" type="date" class="eb-input w-full sm:w-40" @click="openDatePicker" />
         </div>
         <button
           class="eb-btn eb-btn-primary text-sm"

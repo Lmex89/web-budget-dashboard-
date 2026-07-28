@@ -121,6 +121,7 @@ Composables in `src/composables/`:
 - Touch targets: minimum 44px height for buttons and nav items.
 - Bottom nav uses `pb-safe` utility for iPhone safe-area inset.
 - Route `meta.title` is used for document title and mobile header.
+- Date filter inputs on the expenses page use responsive widths (`w-full sm:w-40`) and `min-w-0` on flex children to prevent iOS Safari overflow.
 
 ## Key conventions
 
