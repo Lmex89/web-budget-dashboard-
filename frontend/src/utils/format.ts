@@ -24,12 +24,14 @@ export function formatCurrency(value: string | number | null | undefined): strin
 
 export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return '-'
-  return dateFormatter.format(new Date(value))
+  const dateStr = typeof value === 'string' ? value.split('T')[0] : value
+  return dateFormatter.format(new Date(dateStr + 'T00:00:00'))
 }
 
 export function formatShortDate(value: string | Date | null | undefined): string {
   if (!value) return '-'
-  return shortDateFormatter.format(new Date(value))
+  const dateStr = typeof value === 'string' ? value.split('T')[0] : value
+  return shortDateFormatter.format(new Date(dateStr + 'T00:00:00'))
 }
 
 export function formatMonthName(monthIndex: number): string {

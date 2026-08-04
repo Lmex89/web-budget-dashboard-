@@ -65,11 +65,12 @@ const initialForm: ExpenseForm = {
 const { form, showForm, toggleForm, handleSubmit, errorMessage, resetForm } = useForm<ExpenseForm>({
   initialValues: initialForm,
   onSubmit: async (values) => {
+    const isoDate = new Date(values.date + 'T00:00:00').toISOString()
     if (editingId.value) {
       const payload: UpdateExpensePayload = {
         ...values,
         credit_card_id: values.credit_card_id || null,
-        date: new Date(values.date).toISOString(),
+        date: isoDate,
       }
       await expenseStore.updateExpense(editingId.value, payload)
       editingId.value = null
@@ -79,7 +80,7 @@ const { form, showForm, toggleForm, handleSubmit, errorMessage, resetForm } = us
         credit_card_id: values.credit_card_id || null,
         is_installment: false,
         total_installments: null,
-        date: new Date(values.date).toISOString(),
+        date: isoDate,
       }
       await expenseStore.createExpense(payload)
     }
