@@ -7,7 +7,14 @@ from loguru import logger
 from app.dependencies.auth import get_current_active_user, require_admin
 from app.dependencies.unit_of_work import get_unit_of_work
 from app.domains.repositories.unit_of_work import IUnitOfWork
-from app.schemas.user import UserCreate, UserLogin, UserResponse, UserAddToFamily, TokenResponse
+from app.schemas.user import (
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    UserAddToFamily,
+    UserUpdateRole,
+    TokenResponse,
+)
 from app.schemas.common import BaseResponse
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.core.exceptions import (
@@ -17,7 +24,7 @@ from app.core.exceptions import (
     ForbiddenException,
 )
 from app.core.config import settings
-from app.models import User, Family
+from app.models import User, Family, UserRole
 
 auth_public_router = APIRouter(prefix="/auth", tags=["Auth"])
 auth_protected_router = APIRouter(
@@ -47,7 +54,7 @@ async def register(
             hashed_password=get_password_hash(data.password),
             full_name=data.full_name,
             family_id=family.id,
-            is_admin=True,
+            role=UserRole.ADMIN,
         )
         await uow.users.create(user)
 
@@ -70,7 +77,7 @@ async def login(
         if not user.is_active:
             raise UnauthorizedException("Account is inactive.")
 
-    token = create_access_token({"sub": user.id, "family_id": user.family_id})
+    token = create_access_token({"sub": user.id, "family_id": user.family_id, "role": user.role.value})
     response.set_cookie(
         key="access_token",
         value=token,
@@ -117,13 +124,10 @@ async def list_family_users(
 @auth_protected_router.post("/users", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def add_user_to_family(
     data: UserAddToFamily,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_admin),
     uow: IUnitOfWork = Depends(get_unit_of_work),
 ):
     """Add a new user to the existing family (admin only)."""
-    if not current_user.is_admin:
-        raise ForbiddenException("Only family admins can add users.")
-
     logger.info(f"Adding user to family: email={data.email}, family={current_user.family_id}")
     async with uow:
         existing = await uow.users.get_by_email(data.email)
@@ -136,9 +140,67 @@ async def add_user_to_family(
             hashed_password=get_password_hash(data.password),
             full_name=data.full_name,
             family_id=current_user.family_id,
-            is_admin=False,
+            role=data.role,
         )
         await uow.users.create(user)
 
     logger.info(f"User added to family: id={user.id}, email={user.email}")
+    return BaseResponse(data=UserResponse.model_validate(user).model_dump())
+
+
+@auth_protected_router.patch("/users/{user_id}/role", response_model=BaseResponse)
+async def update_user_role(
+    user_id: str,
+    data: UserUpdateRole,
+    current_user: User = Depends(require_admin),
+    uow: IUnitOfWork = Depends(get_unit_of_work),
+):
+    """Update a family user's role (admin only)."""
+    logger.info(f"Updating user role: user={user_id}, role={data.role.value}, actor={current_user.id}")
+    async with uow:
+        user = await uow.users.get_by_id(user_id)
+        if not user or user.family_id != current_user.family_id:
+            raise ForbiddenException("Cannot update role for users outside your family.")
+        user.role = data.role
+        await uow.users.update(user)
+
+    return BaseResponse(data=UserResponse.model_validate(user).model_dump())
+
+
+@auth_protected_router.patch("/users/{user_id}/deactivate", response_model=BaseResponse)
+async def deactivate_user(
+    user_id: str,
+    current_user: User = Depends(require_admin),
+    uow: IUnitOfWork = Depends(get_unit_of_work),
+):
+    """Deactivate a family user (admin only)."""
+    if user_id == current_user.id:
+        raise ForbiddenException("You cannot deactivate your own account.")
+
+    logger.info(f"Deactivating user: user={user_id}, actor={current_user.id}")
+    async with uow:
+        user = await uow.users.get_by_id(user_id)
+        if not user or user.family_id != current_user.family_id:
+            raise ForbiddenException("Cannot deactivate users outside your family.")
+        user.is_active = False
+        await uow.users.update(user)
+
+    return BaseResponse(data=UserResponse.model_validate(user).model_dump())
+
+
+@auth_protected_router.patch("/users/{user_id}/activate", response_model=BaseResponse)
+async def activate_user(
+    user_id: str,
+    current_user: User = Depends(require_admin),
+    uow: IUnitOfWork = Depends(get_unit_of_work),
+):
+    """Activate a family user (admin only)."""
+    logger.info(f"Activating user: user={user_id}, actor={current_user.id}")
+    async with uow:
+        user = await uow.users.get_by_id(user_id)
+        if not user or user.family_id != current_user.family_id:
+            raise ForbiddenException("Cannot activate users outside your family.")
+        user.is_active = True
+        await uow.users.update(user)
+
     return BaseResponse(data=UserResponse.model_validate(user).model_dump())

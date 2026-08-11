@@ -16,6 +16,7 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 - **Credit Cards** — Track card limits, closing days, and balances.
 - **Debts** — Manage family loans and IOUs with counterparty tracking.
 - **Family Sharing** — Multi-user families with JWT-based authentication (Bearer token + HttpOnly cookie fallback, 30-day token expiry).
+- **Role-based Access** — Simple RBAC with three roles: `admin`, `member`, `viewer`.
 
 ## Project Structure
 
@@ -91,6 +92,15 @@ The backend uses the Unit of Work pattern for transaction management:
 - Services depend on `IUnitOfWork` abstraction
 - UoW coordinates multiple repositories in a single transaction
 - Automatic commit/rollback via context manager
+
+## Roles and Permissions
+
+- `admin`: full access, including family user management and audit logs
+- `member`: can create/update/delete budget data, cannot manage users
+- `viewer`: read-only across budget data
+
+Family registration creates the first user as `admin`. Additional users default to
+`member` unless the admin selects another role when inviting them.
 
 ## Database Migrations
 

@@ -58,6 +58,7 @@ backend/app/
 | `app/core/config.py` | Settings (env defaults) |
 | `app/core/security.py` | JWT + bcrypt |
 | `app/core/exceptions.py` | All exception classes + global handlers |
+| `app/dependencies/auth.py` | Auth + role-based authorization dependencies (`require_roles`) |
 | `app/db/session.py` | Engine, sessionmaker, `get_db` |
 | `app/dependencies/services.py` | Service DI factory functions |
 | `app/domains/services/expense_service.py` | Expense CRUD + CSV export (`list_by_family_csv`) |

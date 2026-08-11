@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -6,13 +7,12 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const navigation = [
+const navigation = computed(() => [
   { name: 'Dashboard', path: '/' },
   { name: 'Expenses', path: '/expenses' },
   { name: 'Categories', path: '/categories' },
-  { name: 'Settings', path: '/settings' },
-  { name: 'Logs', path: '/logs' },
-]
+  ...(authStore.isAdmin ? [{ name: 'Settings', path: '/settings' }, { name: 'Logs', path: '/logs' }] : []),
+])
 </script>
 
 <template>

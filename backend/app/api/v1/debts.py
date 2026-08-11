@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, status
 from loguru import logger
 
-from app.dependencies.auth import get_current_active_user
+from app.dependencies.auth import get_current_active_user, require_roles
 from app.dependencies.services import get_debt_service
 from app.domains.services.debt_service import DebtService
-from app.models import User
+from app.models import User, UserRole
 from app.schemas.common import BaseResponse
 from app.schemas.debt import DebtCreate, DebtResponse
 
@@ -27,7 +27,7 @@ async def list_debts(
 @router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_debt(
     data: DebtCreate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.MEMBER)),
     service: DebtService = Depends(get_debt_service),
 ):
     logger.info(f"POST /debts - family={current_user.family_id}, name={data.name}")

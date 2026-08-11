@@ -7,11 +7,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from loguru import logger
 
-from app.dependencies.auth import get_current_active_user
+from app.dependencies.auth import get_current_active_user, require_roles
 from app.dependencies.services import get_audit_log_service
 from app.domains.services.audit_log_service import AuditLogService
 from app.schemas.common import PaginatedResponse
-from app.models import User
+from app.models import User, UserRole
 
 router = APIRouter(
     prefix="/audit-logs",
@@ -26,7 +26,7 @@ async def list_audit_logs(
     page_size: int = Query(25, ge=1, le=100),
     entity_type: Optional[str] = Query(None),
     action: Optional[str] = Query(None),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
     service: AuditLogService = Depends(get_audit_log_service),
 ):
     logger.info(f"GET /audit-logs - user={current_user.id}, page={page}, size={page_size}")

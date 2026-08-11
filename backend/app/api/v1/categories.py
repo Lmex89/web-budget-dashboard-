@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, status
 from loguru import logger
 
-from app.dependencies.auth import get_current_active_user
+from app.dependencies.auth import get_current_active_user, require_roles
 from app.dependencies.services import get_category_service
 from app.domains.services.category_service import CategoryService
-from app.models import User
+from app.models import User, UserRole
 from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate
 from app.schemas.common import BaseResponse
 
@@ -27,7 +27,7 @@ async def list_categories(
 @router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_category(
     data: CategoryCreate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.MEMBER)),
     service: CategoryService = Depends(get_category_service),
 ):
     logger.info(f"POST /categories - family={current_user.family_id}, name={data.name}")
@@ -39,7 +39,7 @@ async def create_category(
 async def update_category(
     category_id: str,
     data: CategoryUpdate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.MEMBER)),
     service: CategoryService = Depends(get_category_service),
 ):
     logger.info(f"PUT /categories/{category_id} - family={current_user.family_id}, name={data.name}")
@@ -50,7 +50,7 @@ async def update_category(
 @router.delete("/{category_id}", response_model=BaseResponse)
 async def delete_category(
     category_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN)),
     service: CategoryService = Depends(get_category_service),
 ):
     logger.info(f"DELETE /categories/{category_id} - family={current_user.family_id}")

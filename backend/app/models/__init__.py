@@ -36,6 +36,12 @@ class DebtType(str, enum.Enum):
     FAMILY_LOAN = "family_loan"
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    MEMBER = "member"
+    VIEWER = "viewer"
+
+
 class Family(Base):
     __tablename__ = "families"
 
@@ -64,7 +70,11 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, values_callable=lambda obj: [e.value for e in obj]),
+        default=UserRole.MEMBER,
+        nullable=False,
+    )
     family_id: Mapped[str] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(

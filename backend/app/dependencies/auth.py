@@ -8,7 +8,7 @@ from loguru import logger
 from app.db.session import get_db
 from app.core.exceptions import UnauthorizedException, ForbiddenException
 from app.core.security import decode_access_token
-from app.models import User
+from app.models import User, UserRole
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -70,7 +70,19 @@ async def get_current_active_user(
 async def require_admin(
     current_user: User = Depends(get_current_active_user),
 ) -> User:
-    if not current_user.is_admin:
+    if current_user.role != UserRole.ADMIN:
         raise ForbiddenException("Admin privileges required.")
     logger.debug(f"Admin access granted: user={current_user.id}")
     return current_user
+
+
+def require_roles(*allowed_roles: UserRole):
+    async def role_dependency(
+        current_user: User = Depends(get_current_active_user),
+    ) -> User:
+        if current_user.role not in allowed_roles:
+            roles = ", ".join(role.value for role in allowed_roles)
+            raise ForbiddenException(f"Requires one of roles: {roles}.")
+        return current_user
+
+    return role_dependency

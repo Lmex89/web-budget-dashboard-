@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import type { UserRole } from '@/types'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -55,13 +56,13 @@ const router = createRouter({
           path: 'settings',
           name: 'Settings',
           component: () => import('@/views/Settings/Index.vue'),
-          meta: { title: 'Family' },
+          meta: { title: 'Family', requiredRoles: ['admin'] as UserRole[] },
         },
         {
           path: 'logs',
           name: 'Logs',
           component: () => import('@/views/Logs/Index.vue'),
-          meta: { title: 'Audit logs' },
+          meta: { title: 'Audit logs', requiredRoles: ['admin'] as UserRole[] },
         },
       ],
     },
@@ -77,7 +78,19 @@ router.beforeEach(async (to, _from, next) => {
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     next({ name: 'Login' })
-  } else if (to.name === 'Login' && auth.isAuthenticated) {
+    return
+  }
+
+  const requiredRoles = to.meta.requiredRoles as UserRole[] | undefined
+  if (requiredRoles?.length) {
+    const currentRole = auth.user?.role
+    if (!currentRole || !requiredRoles.includes(currentRole)) {
+      next({ name: 'Dashboard' })
+      return
+    }
+  }
+
+  if (to.name === 'Login' && auth.isAuthenticated) {
     next({ name: 'Dashboard' })
   } else {
     next()

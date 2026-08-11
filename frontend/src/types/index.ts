@@ -1,9 +1,11 @@
+export type UserRole = 'admin' | 'member' | 'viewer'
+
 export interface User {
   id: string
   email: string
   full_name: string
   is_active: boolean
-  is_admin: boolean
+  role: UserRole
   family_id: string
   created_at: string
 }
@@ -101,6 +103,7 @@ export interface CreateMemberPayload {
   email: string
   password: string
   full_name: string
+  role: UserRole
 }
 
 export interface RegisterPayload {

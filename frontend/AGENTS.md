@@ -129,6 +129,7 @@ Composables in `src/composables/`:
 ## Key conventions
 
 - **Auth**: Bearer token stored in `localStorage` (key `budget_access_token`), sent via axios request interceptor as `Authorization: Bearer <token>`. HttpOnly cookie retained as fallback. Pinia auth store calls `fetchCurrentUser()` on first load (auth header auto-attached). Router guard uses `authStore.authReady` + `isAuthenticated`.
+- **Roles**: User payload includes `role` (`admin` | `member` | `viewer`). Route-level role checks use `meta.requiredRoles` in `src/router/index.ts`.
 - **Axios 401 interceptor**: Clears auth state only (no `window.location.href` redirect to avoid reload loop). Redirect is handled by the router guard.
 - **Routes**: Lazy-loaded via dynamic `import()`. Protected routes use `beforeEach` guard. Each route has `meta.title` for document title.
 - **No comments in code** unless explicitly requested.

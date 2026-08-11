@@ -7,7 +7,7 @@ import PaperCard from '@/components/ui/PaperCard.vue'
 import FormField from '@/components/ui/FormField.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useForm } from '@/composables/useForm'
-import type { User, CreateMemberPayload } from '@/types'
+import type { User, CreateMemberPayload, UserRole } from '@/types'
 
 const authStore = useAuthStore()
 const users = shallowRef<User[]>([])
@@ -16,13 +16,21 @@ interface MemberForm {
   email: string
   password: string
   full_name: string
+  role: UserRole
 }
 
 const initialForm: MemberForm = {
   email: '',
   password: '',
   full_name: '',
+  role: 'member',
 }
+
+const roleOptions: { value: UserRole; label: string }[] = [
+  { value: 'member', label: 'Member' },
+  { value: 'viewer', label: 'Viewer' },
+  { value: 'admin', label: 'Admin' },
+]
 
 const { form, showForm, errorMessage, toggleForm, handleSubmit } = useForm<MemberForm>({
   initialValues: initialForm,
@@ -38,6 +46,29 @@ async function fetchUsers() {
   if (data.success) users.value = data.data
 }
 
+function roleChipClass(role: UserRole): string {
+  if (role === 'admin') return 'chip-accent'
+  if (role === 'viewer') return 'chip-warn'
+  return 'chip-muted'
+}
+
+function roleLabel(role: UserRole): string {
+  if (role === 'admin') return 'Admin'
+  if (role === 'viewer') return 'Viewer'
+  return 'Member'
+}
+
+async function updateRole(userId: string, role: UserRole) {
+  await api.patch(`/api/v1/auth/users/${userId}/role`, { role })
+  await fetchUsers()
+}
+
+async function toggleUserActive(userId: string, isActive: boolean) {
+  const path = isActive ? 'deactivate' : 'activate'
+  await api.patch(`/api/v1/auth/users/${userId}/${path}`)
+  await fetchUsers()
+}
+
 onMounted(fetchUsers)
 </script>
 
@@ -46,7 +77,7 @@ onMounted(fetchUsers)
     <PageHeader title="Family" subtitle="Manage who shares this budget.">
       <template #action>
         <button
-          v-if="authStore.user?.is_admin"
+          v-if="authStore.isAdmin"
           class="eb-btn"
           :class="showForm ? 'eb-btn-ghost' : 'eb-btn-primary'"
           @click="toggleForm"
@@ -71,6 +102,13 @@ onMounted(fetchUsers)
         <FormField label="Password" for-id="user-password">
           <input id="user-password" v-model="form.password" type="password" class="eb-input" placeholder="••••••••" required minlength="8" />
         </FormField>
+        <FormField label="Role" for-id="user-role">
+          <select id="user-role" v-model="form.role" class="eb-select">
+            <option v-for="option in roleOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </FormField>
       </div>
       <p v-if="errorMessage" class="text-sm font-medium text-danger">{{ errorMessage }}</p>
       <div class="flex items-center gap-3">
@@ -93,12 +131,24 @@ onMounted(fetchUsers)
           <p class="text-xs text-muted truncate">{{ u.email }}</p>
         </div>
         <div class="flex flex-col items-end gap-1.5 shrink-0">
-          <span class="chip" :class="u.is_admin ? 'chip-accent' : 'chip-muted'">
-            {{ u.is_admin ? 'Admin' : 'Member' }}
-          </span>
+          <span class="chip" :class="roleChipClass(u.role)">{{ roleLabel(u.role) }}</span>
           <span class="chip" :class="u.is_active ? 'chip-sage' : 'chip-danger'">
             {{ u.is_active ? 'Active' : 'Inactive' }}
           </span>
+          <div v-if="authStore.isAdmin && authStore.user?.id !== u.id" class="flex items-center gap-2 pt-1">
+            <select class="eb-select !h-8 !text-xs" :value="u.role" @change="updateRole(u.id, ($event.target as HTMLSelectElement).value as UserRole)">
+              <option v-for="option in roleOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <button
+              type="button"
+              class="eb-btn eb-btn-ghost !h-8 !px-2 !text-xs"
+              @click="toggleUserActive(u.id, u.is_active)"
+            >
+              {{ u.is_active ? 'Deactivate' : 'Activate' }}
+            </button>
+          </div>
         </div>
       </PaperCard>
     </div>

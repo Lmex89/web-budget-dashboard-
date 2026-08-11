@@ -126,6 +126,8 @@ All backend code **must** follow SOLID principles:
 ## Auth, API, and data-shape conventions
 
 - Authentication uses JWT dual-mode: `Authorization: Bearer <token>` header (primary) + `access_token` HttpOnly cookie (fallback). Login returns `{ access_token, token_type, user }` in the JSON body. See [backend/app/dependencies/auth.py](backend/app/dependencies/auth.py).
+- User authorization is role-based with `UserRole` enum values: `admin`, `member`, `viewer`.
+- Use `require_roles(...)` / `require_admin` dependencies for endpoint authorization checks instead of inline role checks.
 - Keep API response envelope consistency with schemas in [backend/app/schemas/common.py](backend/app/schemas/common.py).
 - Money values use Decimal/Numeric in domain and schema models (see [backend/app/models/__init__.py](backend/app/models/__init__.py) and [backend/app/schemas/expense.py](backend/app/schemas/expense.py)); avoid introducing float math in business logic.
 - Custom exception classes are organized by domain in [backend/app/core/exceptions.py](backend/app/core/exceptions.py).

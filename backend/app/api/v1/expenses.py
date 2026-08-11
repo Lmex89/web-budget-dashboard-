@@ -9,7 +9,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, status
 from loguru import logger
 
-from app.dependencies.auth import get_current_active_user
+from app.dependencies.auth import get_current_active_user, require_roles
 from app.dependencies.services import (
     get_expense_service,
     get_installment_service,
@@ -24,7 +24,7 @@ from app.schemas.expense import (
     ExpenseResponse,
 )
 from app.schemas.common import BaseResponse, PaginatedResponse
-from app.models import User
+from app.models import User, UserRole
 
 router = APIRouter(
     prefix="/expenses", tags=["Expenses"],
@@ -82,7 +82,7 @@ async def list_expenses(
 @router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_expense(
     data: ExpenseCreate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.MEMBER)),
     service: ExpenseService = Depends(get_expense_service),
 ):
     logger.info(f"POST /expenses - user={current_user.id}, amount={data.amount}")
@@ -109,7 +109,7 @@ async def get_expense(
 async def update_expense(
     expense_id: str,
     data: ExpenseUpdate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.MEMBER)),
     service: ExpenseService = Depends(get_expense_service),
 ):
     logger.info(f"PUT /expenses/{expense_id} - user={current_user.id}")
@@ -122,7 +122,7 @@ async def update_expense(
 @router.delete("/{expense_id}", response_model=BaseResponse)
 async def delete_expense(
     expense_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.MEMBER)),
     service: ExpenseService = Depends(get_expense_service),
 ):
     logger.warning(f"DELETE /expenses/{expense_id} - user={current_user.id}")

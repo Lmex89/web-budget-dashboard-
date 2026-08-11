@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 type NavItem = {
   name: string
@@ -43,6 +46,15 @@ const nav: NavItem[] = [
   },
 ]
 
+const visibleNav = computed(() => {
+  if (authStore.isAdmin) return nav
+  return nav.filter((item) => item.path !== '/settings' && item.path !== '/logs')
+})
+
+const navGridClass = computed(() => {
+  return visibleNav.value.length <= 3 ? 'grid-cols-3' : 'grid-cols-5'
+})
+
 const isActive = (path: string): boolean => {
   if (path === '/') return route.path === '/'
   return route.path === path || route.path.startsWith(`${path}/`)
@@ -53,9 +65,9 @@ const isActive = (path: string): boolean => {
   <nav
     class="lg:hidden fixed bottom-0 inset-x-0 z-40 frosted bg-paper/80 border-t border-rule pb-safe"
   >
-    <div class="grid grid-cols-5 h-16">
+    <div class="grid h-16" :class="navGridClass">
       <router-link
-        v-for="item in nav"
+        v-for="item in visibleNav"
         :key="item.path"
         :to="item.path"
         :aria-label="item.name"

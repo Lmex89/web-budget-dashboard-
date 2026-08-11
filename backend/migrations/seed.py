@@ -23,8 +23,8 @@ DEFAULT_EMAIL = "admin@family.com"
 DEFAULT_PASSWORD = "admin123"
 
 SQL = """INSERT IGNORE INTO families (id, name) VALUES ('00000000-0000-0000-0000-000000000001', 'Demo Family');
-INSERT IGNORE INTO users (id, email, hashed_password, full_name, is_active, is_admin, family_id)
-VALUES ('00000000-0000-0000-0000-000000000002', '{email}', '{password}', 'Admin User', TRUE, TRUE, '00000000-0000-0000-0000-000000000001');
+INSERT IGNORE INTO users (id, email, hashed_password, full_name, is_active, role, family_id)
+VALUES ('00000000-0000-0000-0000-000000000002', '{email}', '{password}', 'Admin User', TRUE, 'admin', '00000000-0000-0000-0000-000000000001');
 """.format(email=DEFAULT_EMAIL, password=get_password_hash(DEFAULT_PASSWORD))
 
 

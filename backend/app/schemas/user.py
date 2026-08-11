@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
+from app.models import UserRole
 
 
 class UserBase(BaseModel):
@@ -15,6 +16,11 @@ class UserCreate(UserBase):
 class UserAddToFamily(UserBase):
     """Add a user to an existing family (admin action)."""
     password: str = Field(..., min_length=8, max_length=128)
+    role: UserRole = UserRole.MEMBER
+
+
+class UserUpdateRole(BaseModel):
+    role: UserRole
 
 
 class UserLogin(BaseModel):
@@ -25,7 +31,7 @@ class UserLogin(BaseModel):
 class UserResponse(UserBase):
     id: str
     is_active: bool
-    is_admin: bool
+    role: UserRole
     family_id: str
     created_at: datetime
 
