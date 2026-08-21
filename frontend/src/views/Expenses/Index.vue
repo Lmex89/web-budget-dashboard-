@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
@@ -18,6 +18,9 @@ const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
 const creditCardStore = useCreditCardStore()
 const route = useRoute()
+
+const formRef = ref<HTMLFormElement | null>(null)
+const amountInputRef = ref<HTMLInputElement | null>(null)
 
 function parseQueryCategoryIds(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -39,6 +42,8 @@ const selectedCategoryIds = ref<string[]>(
 const filterStartDate = ref(expenseStore.filterStartDate || '')
 const filterEndDate = ref(expenseStore.filterEndDate || '')
 const editingId = ref<string | null>(null)
+const confirmingDeleteId = ref<string | null>(null)
+const deletingId = ref<string | null>(null)
 
 function openDatePicker(e: MouseEvent) {
   ;(e.target as HTMLInputElement).showPicker()
@@ -68,7 +73,7 @@ const initialForm: ExpenseForm = {
   credit_card_id: '',
 }
 
-const { form, showForm, toggleForm, handleSubmit, errorMessage, resetForm } = useForm<ExpenseForm>({
+const { form, showForm, handleSubmit, errorMessage, resetForm } = useForm<ExpenseForm>({
   initialValues: initialForm,
   onSubmit: async (values) => {
     const isoDate = new Date(values.date + 'T00:00:00').toISOString()
@@ -95,6 +100,7 @@ const { form, showForm, toggleForm, handleSubmit, errorMessage, resetForm } = us
 })
 
 function startEdit(expense: ExpenseListItem) {
+  confirmingDeleteId.value = null
   editingId.value = expense.id
   form.value.amount = Number(expense.amount)
   form.value.description = expense.description || ''
@@ -102,7 +108,26 @@ function startEdit(expense: ExpenseListItem) {
   form.value.payment_method = expense.payment_method
   form.value.category_id = expense.category_id
   form.value.credit_card_id = expense.credit_card_id || ''
-  if (!showForm.value) showForm.value = true
+  showForm.value = true
+  nextTick(() => {
+    formRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    amountInputRef.value?.focus()
+    amountInputRef.value?.select()
+  })
+}
+
+function handleToggleForm() {
+  if (showForm.value) {
+    cancelForm()
+  } else {
+    editingId.value = null
+    resetForm()
+    showForm.value = true
+    nextTick(() => {
+      formRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      amountInputRef.value?.focus()
+    })
+  }
 }
 
 function cancelForm() {
@@ -189,9 +214,23 @@ onMounted(() => {
   creditCardStore.fetchCreditCards()
 })
 
-async function handleDelete(id: string) {
-  await expenseStore.deleteExpense(id)
-  fetchExpenses()
+function promptDelete(id: string) {
+  confirmingDeleteId.value = id
+}
+
+function cancelDelete() {
+  confirmingDeleteId.value = null
+}
+
+async function confirmDelete(id: string) {
+  deletingId.value = id
+  try {
+    await expenseStore.deleteExpense(id)
+    confirmingDeleteId.value = null
+    await fetchExpenses()
+  } finally {
+    deletingId.value = null
+  }
 }
 </script>
 
@@ -199,7 +238,7 @@ async function handleDelete(id: string) {
   <div class="space-y-6">
     <PageHeader title="Expenses" subtitle="Track every family spend in one place.">
       <template #action>
-        <button class="eb-btn" :class="showForm ? 'eb-btn-ghost' : 'eb-btn-primary'" @click="toggleForm">
+        <button class="eb-btn" :class="showForm ? 'eb-btn-ghost' : 'eb-btn-primary'" @click="handleToggleForm">
           {{ showForm ? 'Cancel' : 'Add expense' }}
         </button>
       </template>
@@ -240,14 +279,20 @@ async function handleDelete(id: string) {
 
     <form
       v-if="showForm"
+      ref="formRef"
       @submit.prevent="handleSubmit"
-      class="paper-card p-5 md:p-6 space-y-5 animate-fade-up"
+      class="paper-card p-5 md:p-6 space-y-5 animate-fade-up transition-all duration-200"
+      :class="editingId ? 'ring-2 ring-accent/50 shadow-md' : ''"
     >
-      <h3 class="section-title text-base">{{ formTitle }}</h3>
+      <div class="flex items-center justify-between">
+        <h3 class="section-title text-base">{{ formTitle }}</h3>
+        <span v-if="editingId" class="chip chip-accent text-xs">Editing expense</span>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <FormField label="Amount" for-id="amount">
           <input
             id="amount"
+            ref="amountInputRef"
             v-model.number="form.amount"
             type="number"
             step="0.01"
@@ -311,12 +356,16 @@ async function handleDelete(id: string) {
       <PaperCard
         v-for="expense in expenseStore.expenses"
         :key="expense.id"
-        class="p-4 flex items-center justify-between gap-4 animate-fade-up"
+        class="p-4 flex items-center justify-between gap-4 animate-fade-up transition-all"
+        :class="editingId === expense.id ? 'ring-2 ring-accent bg-accent-light/30 dark:bg-accent/10' : ''"
       >
         <div class="min-w-0">
-          <p class="text-sm font-medium truncate">
-            {{ expense.description || expense.category_name }}
-          </p>
+          <div class="flex items-center gap-2 min-w-0">
+            <p class="text-sm font-medium truncate">
+              {{ expense.description || expense.category_name }}
+            </p>
+            <span v-if="editingId === expense.id" class="chip chip-accent text-[10px] py-0 px-1.5 shrink-0">Editing</span>
+          </div>
           <p class="text-xs text-muted mt-0.5">
             {{ formatDate(expense.date) }} · {{ expense.payment_method }}
           </p>
@@ -324,18 +373,37 @@ async function handleDelete(id: string) {
         <div class="text-right shrink-0">
           <p class="text-sm font-semibold tabular-nums">{{ formatCurrency(expense.amount) }}</p>
           <div class="flex items-center justify-end gap-2 mt-1">
-            <button
-              class="text-xs font-semibold text-accent px-2 py-1 rounded-lg hover:bg-accent-light"
-              @click="startEdit(expense)"
-            >
-              Edit
-            </button>
-            <button
-              class="text-xs text-danger px-2 py-1 rounded-lg hover:bg-danger-light"
-              @click="handleDelete(expense.id)"
-            >
-              Delete
-            </button>
+            <template v-if="confirmingDeleteId === expense.id">
+              <button
+                class="text-xs font-semibold text-danger px-2 py-1 rounded-lg bg-danger-light hover:opacity-80"
+                :disabled="deletingId === expense.id"
+                @click="confirmDelete(expense.id)"
+              >
+                {{ deletingId === expense.id ? 'Deleting…' : 'Confirm' }}
+              </button>
+              <button
+                class="text-xs text-muted px-2 py-1 rounded-lg hover:bg-paper-dark"
+                :disabled="deletingId === expense.id"
+                @click="cancelDelete"
+              >
+                Cancel
+              </button>
+            </template>
+            <template v-else>
+              <button
+                class="text-xs font-semibold px-2 py-1 rounded-lg transition-colors"
+                :class="editingId === expense.id ? 'bg-accent text-white font-bold' : 'text-accent hover:bg-accent-light'"
+                @click="startEdit(expense)"
+              >
+                {{ editingId === expense.id ? 'Editing' : 'Edit' }}
+              </button>
+              <button
+                class="text-xs text-danger px-2 py-1 rounded-lg hover:bg-danger-light"
+                @click="promptDelete(expense.id)"
+              >
+                Delete
+              </button>
+            </template>
           </div>
         </div>
       </PaperCard>
@@ -354,19 +422,51 @@ async function handleDelete(id: string) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="expense in expenseStore.expenses" :key="expense.id">
+          <tr
+            v-for="expense in expenseStore.expenses"
+            :key="expense.id"
+            class="transition-colors"
+            :class="editingId === expense.id ? 'bg-accent-light/40 dark:bg-accent/15' : ''"
+          >
             <td class="text-muted">{{ formatDate(expense.date) }}</td>
-            <td class="font-medium">{{ expense.description || '-' }}</td>
+            <td class="font-medium">
+              <div class="flex items-center gap-2">
+                <span>{{ expense.description || '-' }}</span>
+                <span v-if="editingId === expense.id" class="chip chip-accent text-[10px] py-0 px-1.5 shrink-0">Editing</span>
+              </div>
+            </td>
             <td>{{ expense.category_name }}</td>
             <td class="text-right font-semibold tabular-nums">{{ formatCurrency(expense.amount) }}</td>
             <td class="text-muted">{{ expense.user_name }}</td>
-            <td class="text-right">
-              <button class="text-xs font-semibold text-accent hover:underline mr-3" @click="startEdit(expense)">
-                Edit
-              </button>
-              <button class="text-xs font-semibold text-danger hover:underline" @click="handleDelete(expense.id)">
-                Delete
-              </button>
+            <td class="text-right whitespace-nowrap">
+              <template v-if="confirmingDeleteId === expense.id">
+                <button
+                  class="text-xs font-semibold text-danger hover:underline mr-3"
+                  :disabled="deletingId === expense.id"
+                  @click="confirmDelete(expense.id)"
+                >
+                  {{ deletingId === expense.id ? 'Deleting…' : 'Confirm' }}
+                </button>
+                <button
+                  class="text-xs font-semibold text-muted hover:underline"
+                  :disabled="deletingId === expense.id"
+                  @click="cancelDelete"
+                >
+                  Cancel
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  class="text-xs font-semibold hover:underline mr-3"
+                  :class="editingId === expense.id ? 'text-accent font-bold underline' : 'text-accent'"
+                  @click="startEdit(expense)"
+                >
+                  {{ editingId === expense.id ? 'Editing…' : 'Edit' }}
+                </button>
+                <button class="text-xs font-semibold text-danger hover:underline" @click="promptDelete(expense.id)">
+                  Delete
+                </button>
+              </template>
             </td>
           </tr>
         </tbody>

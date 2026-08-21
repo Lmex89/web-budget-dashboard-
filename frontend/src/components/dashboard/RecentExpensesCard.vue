@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import PaperCard from '@/components/ui/PaperCard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import type { DashboardExpense } from '@/types'
@@ -14,6 +15,21 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'delete', id: string): void
 }>()
+
+const confirmingDeleteId = ref<string | null>(null)
+
+function promptDelete(id: string) {
+  confirmingDeleteId.value = id
+}
+
+function cancelDelete() {
+  confirmingDeleteId.value = null
+}
+
+function confirmDelete(id: string) {
+  confirmingDeleteId.value = null
+  emit('delete', id)
+}
 
 const { formatCurrency } = useCurrency()
 </script>
@@ -69,9 +85,24 @@ const { formatCurrency } = useCurrency()
           <span class="text-[0.9375rem] font-semibold tabular-nums text-ink block">
             {{ formatCurrency(expense.amount) }}
           </span>
+          <div v-if="confirmingDeleteId === expense.id" class="flex items-center justify-end gap-2 mt-1">
+            <button
+              class="text-xs font-semibold text-danger hover:underline"
+              @click="confirmDelete(expense.id)"
+            >
+              Confirm
+            </button>
+            <button
+              class="text-xs text-muted hover:underline"
+              @click="cancelDelete"
+            >
+              Cancel
+            </button>
+          </div>
           <button
+            v-else
             class="text-xs text-danger hover:underline mt-1"
-            @click="emit('delete', expense.id)"
+            @click="promptDelete(expense.id)"
           >
             Delete
           </button>

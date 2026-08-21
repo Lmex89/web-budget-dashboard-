@@ -136,6 +136,8 @@ Composables in `src/composables/`:
 - **No comments in code** unless explicitly requested.
 - **Debt API shape**: Keep debt request/response fields aligned with backend schema names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) instead of introducing frontend-only aliases.
 - **Expense category filter**: The expenses view uses `CategoryFilter` to select multiple categories. Selected IDs are joined with commas and sent as the `category_id` query parameter; the backend already supports single or multiple comma-separated category IDs.
+- **Expense deletion confirmation**: Expense deletion in both desktop table and mobile card views requires two-step confirmation (clicking Delete reveals Confirm and Cancel action buttons before dispatching the backend delete request).
+- **Expense edit focus & active indicators**: When editing an expense, the form scrolls into view, the amount input is automatically focused and selected, and the active item being edited is highlighted with an "Editing" badge and border/background highlights across mobile cards and desktop tables.
 
 ## Reactivity and TypeScript conventions
 

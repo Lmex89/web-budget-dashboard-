@@ -143,6 +143,8 @@ All backend code **must** follow SOLID principles:
 - Category names can be edited inline from the Categories route; the backend enforces family ownership and name uniqueness on update.
 - Category delete is a soft delete and is blocked if the category still has active expenses. Reassign or delete those expenses first.
 - Expense list filtering supports one or many categories: the backend treats `category_id` as a single id or a comma-separated list; the frontend renders this as a multi-select checkbox chip group via `frontend/src/components/expenses/CategoryFilter.vue`.
+- Expense deletion in desktop and mobile views requires a two-step confirmation before triggering backend deletion.
+- Expense editing smoothly scrolls to the form, focuses the amount input, and highlights the active editing card/table row with an "Editing" badge and accent styling.
 - Date filter inputs on the expenses page use responsive widths (`w-full sm:w-40`) and `min-w-0` on flex children to prevent iOS Safari overflow.
 - Mobile bottom navigation in `frontend/src/components/layout/BottomNav.vue` must render icons/labels as native Vue template nodes (no `v-html` HTML injection) to keep all tabs visible on iOS Safari.
 
