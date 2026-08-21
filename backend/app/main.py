@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -16,6 +16,7 @@ from app.core.exceptions import (
     generic_exception_handler,
 )
 from app.core.middleware import SecurityHeadersMiddleware
+from app.dependencies.tenant import tenant_scope
 from app.api.v1.expenses import router as expenses_router
 from app.api.v1.auth import auth_public_router, auth_protected_router
 from app.api.v1.categories import router as categories_router
@@ -42,6 +43,7 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
         docs_url="/docs",
         redoc_url="/redoc",
+        dependencies=[Depends(tenant_scope)],
     )
 
     application.add_middleware(

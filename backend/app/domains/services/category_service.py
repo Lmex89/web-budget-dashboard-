@@ -2,7 +2,7 @@
 
 from loguru import logger
 
-from app.core.exceptions import CategoryInUseException, CategoryNotFoundException, ConflictException, ForbiddenException
+from app.core.exceptions import CategoryInUseException, CategoryNotFoundException, ConflictException
 from app.domains.repositories.unit_of_work import IUnitOfWork
 from app.models import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate
@@ -40,7 +40,7 @@ class CategoryService:
             if not category:
                 raise CategoryNotFoundException(category_id)
             if category.family_id != family_id:
-                raise ForbiddenException("This category does not belong to your family.")
+                raise CategoryNotFoundException(category_id)
 
             if data.name is not None and category.name != data.name:
                 exists = await self.uow.categories.exists_by_name(family_id, data.name)
@@ -62,7 +62,7 @@ class CategoryService:
             if not category:
                 raise CategoryNotFoundException(category_id)
             if category.family_id != family_id:
-                raise ForbiddenException("This category does not belong to your family.")
+                raise CategoryNotFoundException(category_id)
 
             if await self.uow.categories.has_expenses(category_id):
                 raise CategoryInUseException(category.name)

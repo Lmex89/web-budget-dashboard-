@@ -31,7 +31,7 @@ You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_tas
 - Run backend locally (from `backend/`, venv active): `uvicorn app.main:app --reload`
 - Run frontend locally (from `frontend/`): `npm run dev`
 - Run backend tests (from `backend/`): `pytest`
-- Backup database: `./backup-db.sh`
+- Backup database: `./backup-db.sh` (local `./backups/` + optional Backblaze B2 upload via rclone, both 30-day retention)
 - Restore database: `./restore-db.sh <backup-file>`
 
 > **Local backend note:** All local backend commands require a `backend/.env` file. The default `DATABASE_URL` in `app/core/config.py` points to `localhost:3306`, but Docker Compose exposes MariaDB on host port `3308`. Copy `backend/.env.example` to `backend/.env` and adjust the port before running migrations or the dev server.
@@ -45,7 +45,8 @@ You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_tas
 
 ## Architecture boundaries (required)
 
-Follow Clean Architecture boundaries described in [README.md](README.md):
+Follow the monorepo architecture and request flow described in the
+[Architecture Structure](README.md#architecture-structure) section of the README:
 
 - API layer (HTTP only): [backend/app/api](backend/app/api)
 - Domain interfaces and business logic: [backend/app/domains](backend/app/domains)
@@ -101,6 +102,13 @@ All backend code **must** follow SOLID principles:
 - Repository `delete` methods **must** set `deleted_at` — never call `db.delete()`.
 - Every query method **must** filter with `model.deleted_at.is_(None)` to exclude soft-deleted rows.
 - Every new repository implementation **must** follow this pattern via a private `_active_filter()` helper.
+
+## Multi-tenancy (required)
+
+- Each user belongs to exactly **one family**. Tenant identity comes only from `current_user.family_id`; never trust client-supplied family ids.
+- Cross-family object access returns **404** (family-scoped deletes/role changes too), not 403, to avoid resource enumeration.
+- Global tenant guard lives in `backend/app/db/tenant_guard.py` (feature-flagged by `ENABLE_GLOBAL_TENANT_GUARD`, default `false`). When on, it injects `family_id` predicates into every SELECT on tenant-owned models. Enable it in staging first, then prod. See `backend/AGENTS.md`.
+- Set `ENABLE_GLOBAL_TENANT_GUARD` in `backend/.env` (local) and `.env.docker` (Docker) — the single source of truth for runtime config.
 
 ## Async and transaction conventions
 

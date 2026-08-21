@@ -22,13 +22,42 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 
 ```
 .
-├── backend/            # FastAPI Clean Architecture backend
-│   ├── app/            # Application code
-│   ├── migrations/     # Raw SQL migrations
-│   └── tests/          # Test suite
-├── frontend/           # Vue 3 SPA frontend
-├── docker-compose.yml  # Local development orchestration
-└── docs/               # Placeholder for future ADRs / documentation
+├── backend/                    # FastAPI backend
+│   ├── app/
+│   │   ├── api/v1/             # HTTP route handlers
+│   │   ├── core/               # Configuration, security, exceptions, logging
+│   │   ├── db/                 # Async SQLAlchemy engine and tenant guard
+│   │   ├── dependencies/       # FastAPI dependency injection wiring
+│   │   ├── domains/
+│   │   │   ├── repositories/   # Repository and Unit of Work interfaces
+│   │   │   └── services/       # Domain business logic
+│   │   ├── infrastructure/
+│   │   │   └── repositories/   # SQLAlchemy repository implementations
+│   │   ├── models/             # ORM entities
+│   │   └── schemas/            # Pydantic request and response DTOs
+│   ├── migrations/sql/         # Numbered raw SQL migrations
+│   └── tests/                  # Backend test suite
+├── frontend/                   # Vue 3 + Vite web SPA
+│   └── src/
+│       ├── components/         # Shared and feature UI components
+│       ├── composables/        # Reusable Composition API logic
+│       ├── router/              # Routes and navigation guards
+│       ├── services/            # Axios API client
+│       ├── stores/              # Pinia application state
+│       ├── views/               # Route-level pages
+│       ├── types/               # Shared TypeScript types
+│       └── utils/               # Formatting and UI utilities
+├── mobile/                     # React Native mobile client
+│   └── src/
+│       ├── app/                 # Navigation and providers
+│       ├── components/          # Reusable mobile UI
+│       ├── hooks/               # Data and behavior hooks
+│       ├── screens/             # Mobile screens
+│       ├── services/            # Mobile API client
+│       └── stores/              # Mobile state stores
+├── docker-compose.yml          # Local development orchestration
+├── backup-db.sh                # Database backup script
+└── restore-db.sh               # Database restore script
 ```
 
 ## Prerequisites
@@ -77,14 +106,62 @@ docker compose exec backend python -m migrations.seed
 
 > To rebuild from scratch: `docker compose down -v && docker compose up -d --build && docker compose exec backend python -m migrations.run_migrations && docker compose exec backend python -m migrations.seed`
 
-## Backend Architecture
+## Architecture Structure
+
+The application is organized as a client-server system. Both clients use the
+FastAPI API, while the backend isolates business rules from HTTP and database
+details:
+
+```text
+Web client (Vue)       Mobile client (React Native)
+         \                    /
+          \                  /
+           ---- HTTP/JSON ----
+                    |
+             API routes (FastAPI)
+                    |
+          Schemas and dependencies
+                    |
+             Domain services
+                    |
+       Repository interfaces + Unit of Work
+                    |
+       SQLAlchemy repository implementations
+                    |
+             MariaDB database
+```
+
+### Backend Architecture
 
 Follows Clean Architecture / Layered Architecture with Unit of Work pattern:
-- `domains/`: Business logic, entities, and repository interfaces
-- `infrastructure/`: Concrete implementations (SQLAlchemy repos, DB config)
-- `api/`: FastAPI route handlers (thin layer)
-- `core/`: Shared config, exception handling, security, logging
-- `schemas/`: Pydantic DTOs
+- `api/`: FastAPI route handlers; HTTP-only and kept thin
+- `schemas/`: Pydantic request and response DTOs
+- `domains/services/`: Business rules and transaction orchestration
+- `domains/repositories/`: Database-independent repository contracts and `IUnitOfWork`
+- `infrastructure/repositories/`: SQLAlchemy implementations of repository contracts
+- `models/`: SQLAlchemy ORM entities
+- `dependencies/`: FastAPI dependency injection and service wiring
+- `db/`: Database sessions and the optional global tenant guard
+- `core/`: Shared configuration, security, exceptions, logging, and tenant context
+
+Tenant identity comes from the authenticated user's `family_id`. Services pass
+that value to repository operations; clients must not supply or override it.
+
+### Frontend Architecture
+
+- `views/` compose route-level pages from reusable components.
+- `stores/` hold shared feature state and call the API service.
+- `services/api.ts` centralizes Axios configuration and authentication handling.
+- `components/` contains shared UI and feature-specific presentation logic.
+- `composables/` and `utils/` contain reusable client-side behavior and formatting.
+
+### Mobile Architecture
+
+- `screens/` define route-level mobile experiences.
+- `components/` provide reusable React Native UI.
+- `hooks/` encapsulate API-backed data behavior.
+- `services/` centralize API communication.
+- `app/` owns navigation and global providers.
 
 ### Unit of Work Pattern
 
@@ -111,8 +188,14 @@ Migrations are managed using raw SQL files in `backend/migrations/sql/`:
 
 ## Database Backup & Restore
 
+`backup-db.sh` dumps the DB to `./backups/` (30-day retention) and, when rclone
+is installed and B2 credentials are set, also uploads the dump to a Backblaze B2
+bucket (`lmex-backups-db/web-budget-family/`) with the same 30-day retention. If
+rclone or the credentials are missing, the script logs a warning and keeps the
+local backup — the job never fails because of the cloud step.
+
 ```bash
-# Manual backup (dumps to ./backups/ with 30-day retention)
+# Manual backup (dumps to ./backups/, then uploads to Backblaze B2 if configured)
 ./backup-db.sh
 
 # List available backups
@@ -129,6 +212,24 @@ crontab -e
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 0 2 * * * /path/to/web-budget-dashboard-/backup-db.sh >> /path/to/web-budget-dashboard-/backups/cron.log 2>&1
 ```
+
+### Backblaze B2 cloud backup setup
+
+1. Install rclone on the host: `curl https://rclone.org/install.sh | sudo bash` (or your package manager)
+2. Create a bucket named `lmex-backups-db` at https://secure.backblaze.com (10GB free tier)
+3. Create an Application Key under **App Keys** (keep both values)
+4. Fill these in `.env.docker` (gitignored):
+
+```bash
+BACK_BLAZE_KEY_ID=<B2 Application Key ID, e.g. 003a…>
+BACK_BLAZE_SECRET=<B2 Application Key, e.g. K005…>
+BACK_BLAZE_BUCKET=lmex-backups-db
+BACK_BLAZE_DIR=web-budget-family
+```
+
+> Note: Backblaze requires **both** the Application Key ID and the secret.
+> `BACK_BLAZE_KEY_ID` is the long alphanumeric ID (often starting with `00`),
+> not the `K005…` secret itself.
 
 ## Local Development
 

@@ -22,6 +22,7 @@ from app.core.exceptions import (
     EmailAlreadyRegisteredException,
     UnauthorizedException,
     ForbiddenException,
+    NotFoundException,
 )
 from app.core.config import settings
 from app.models import User, Family, UserRole
@@ -160,7 +161,7 @@ async def update_user_role(
     async with uow:
         user = await uow.users.get_by_id(user_id)
         if not user or user.family_id != current_user.family_id:
-            raise ForbiddenException("Cannot update role for users outside your family.")
+            raise NotFoundException("User", user_id)
         user.role = data.role
         await uow.users.update(user)
 
@@ -181,7 +182,7 @@ async def deactivate_user(
     async with uow:
         user = await uow.users.get_by_id(user_id)
         if not user or user.family_id != current_user.family_id:
-            raise ForbiddenException("Cannot deactivate users outside your family.")
+            raise NotFoundException("User", user_id)
         user.is_active = False
         await uow.users.update(user)
 
@@ -199,7 +200,7 @@ async def activate_user(
     async with uow:
         user = await uow.users.get_by_id(user_id)
         if not user or user.family_id != current_user.family_id:
-            raise ForbiddenException("Cannot activate users outside your family.")
+            raise NotFoundException("User", user_id)
         user.is_active = True
         await uow.users.update(user)
 

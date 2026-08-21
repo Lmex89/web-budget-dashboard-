@@ -8,6 +8,7 @@ from loguru import logger
 from app.db.session import get_db
 from app.core.exceptions import UnauthorizedException, ForbiddenException
 from app.core.security import decode_access_token
+from app.core.tenant import set_tenant_context
 from app.models import User, UserRole
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -57,6 +58,7 @@ async def get_current_user(
         logger.warning(f"Inactive user attempted access: id={user.id}, email={user.email}")
         raise UnauthorizedException("User is inactive.")
 
+    set_tenant_context(user.family_id)
     logger.debug(f"Authenticated user: id={user.id}, email={user.email}, family={user.family_id}")
     return user
 

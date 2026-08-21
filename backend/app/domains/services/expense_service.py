@@ -50,7 +50,7 @@ class ExpenseService:
                 f"Family mismatch: expense={expense_id} belongs to "
                 f"family={expense.family_id}, requested by family={family_id}"
             )
-            raise ExpenseNotInFamilyException()
+            raise ExpenseNotInFamilyException(expense_id)
         return expense
 
     async def list_by_family_csv(

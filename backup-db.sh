@@ -8,7 +8,9 @@
 #   2. Locates the running `db` container through docker compose.
 #   3. Runs `mysqldump` inside the container and pipes the output through gzip.
 #   4. Saves the compressed dump to ./backups/<db>_<YYYYMMDD_HHMMSS>.sql.gz
-#   5. Deletes backups older than RETENTION_DAYS (default 30).
+#   5. Uploads the dump to a Backblaze B2 bucket via rclone (best-effort).
+#   6. Prunes cloud backups older than RETENTION_DAYS (mirrors local cleanup).
+#   7. Deletes local backups older than RETENTION_DAYS (default 30).
 #
 # USAGE
 #   ./backup-db.sh
@@ -17,12 +19,17 @@
 #   0 2 * * * /full/path/backup-db.sh >> /full/path/backups/cron.log 2>&1
 #
 # DEPENDENCIES
-#   docker, docker compose, gzip, find
+#   docker, docker compose, gzip, find, rclone (rclone only needed for the
+#   Backblaze B2 upload — without it the local backup still succeeds)
 #
 # ENV VARS READ FROM .env.docker
-#   MYSQL_USER      — DB user with dump privileges
-#   MYSQL_PASSWORD   — password for MYSQL_USER
-#   MYSQL_DATABASE   — database name to dump
+#   MYSQL_USER         — DB user with dump privileges
+#   MYSQL_PASSWORD     — password for MYSQL_USER
+#   MYSQL_DATABASE     — database name to dump
+#   BACK_BLAZE_KEY_ID  — B2 Application Key ID (rclone account; required to upload)
+#   BACK_BLAZE_SECRET   — B2 Application Key (rclone key; required to upload)
+#   BACK_BLAZE_BUCKET   — B2 bucket name (default: lmex-backups-db)
+#   BACK_BLAZE_DIR      — folder/prefix inside the bucket (default: web-budget-family)
 # =============================================================================
 
 # ── Bash strict mode ──────────────────────────────────────────────────────────
@@ -113,6 +120,47 @@ else
   rm -f "$OUTPUT_PATH"
   exit 1
 fi
+
+# ── Backblaze B2 cloud upload (best-effort) ──────────────────────────────────
+# upload_to_backblaze copies the compressed dump to the configured B2 bucket and
+# prunes cloud backups older than RETENTION_DAYS. If rclone is not installed or
+# the B2 credentials are missing, the local backup is still kept and a warning
+# is logged (the backup job must never fail because the cloud step did).
+upload_to_backblaze() {
+  local cloud_dir="${BACK_BLAZE_BUCKET:-lmex-backups-db}/${BACK_BLAZE_DIR:-web-budget-family}"
+
+  if ! command -v rclone >/dev/null 2>&1; then
+    log_warning "rclone not found — skipping Backblaze B2 upload (install it: https://rclone.org/install/)"
+    return 0
+  fi
+
+  if [[ -z "${BACK_BLAZE_KEY_ID:-}" || -z "${BACK_BLAZE_SECRET:-}" ]]; then
+    log_warning "BACK_BLAZE_KEY_ID / BACK_BLAZE_SECRET not set in .env.docker — skipping Backblaze B2 upload"
+    return 0
+  fi
+
+  # rclone resolves the `b2` remote from the `:b2:` shorthand; credentials are
+  # passed as CLI flags (older rclone builds ignore the RCLONE_CONFIG_B2_* env
+  # vars, so flags are the reliable cross-version approach).
+  log_info "Uploading backup to Backblaze B2 → b2:${cloud_dir}/${FILENAME}"
+  if rclone copy "$OUTPUT_PATH" ":b2:${cloud_dir}/" \
+      --b2-account "$BACK_BLAZE_KEY_ID" \
+      --b2-key "$BACK_BLAZE_SECRET"; then
+    log_info "Cloud upload succeeded: ${FILENAME}"
+  else
+    log_error "Cloud upload failed — local backup kept at ${OUTPUT_PATH}"
+  fi
+
+  # Prune cloud backups older than RETENTION_DAYS (mirrors local cleanup below).
+  log_info "Pruning B2 backups older than ${RETENTION_DAYS} days"
+  rclone delete ":b2:${cloud_dir}/" \
+      --b2-account "$BACK_BLAZE_KEY_ID" \
+      --b2-key "$BACK_BLAZE_SECRET" \
+      --include "*.sql.gz" --min-age "${RETENTION_DAYS}d" \
+    || log_warning "Cloud retention cleanup failed — cloud backups kept"
+}
+
+upload_to_backblaze
 
 # ── Retention cleanup ────────────────────────────────────────────────────────
 # `find ... -mtime +N -delete` removes files modified more than N days ago.

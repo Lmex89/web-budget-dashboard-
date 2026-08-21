@@ -114,9 +114,15 @@ class ExpenseNotFoundException(NotFoundException):
         super().__init__("Expense", expense_id)
 
 
-class ExpenseNotInFamilyException(ForbiddenException):
-    def __init__(self):
-        super().__init__("This expense does not belong to your family.")
+class ExpenseNotInFamilyException(NotFoundException):
+    """Raised when an expense exists but belongs to another family.
+
+    Returns 404 (not 403) to avoid leaking whether a cross-family resource
+    exists (anti-resource-enumeration).
+    """
+
+    def __init__(self, expense_id: str):
+        super().__init__("Expense", expense_id)
 
 
 class InvalidCategoryForExpenseException(ValidationException):

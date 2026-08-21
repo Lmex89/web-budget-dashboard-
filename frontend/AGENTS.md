@@ -1,6 +1,7 @@
 # Frontend AGENTS.md
 
-See [root AGENTS.md](../AGENTS.md) for project overview. This file adds
+See [root AGENTS.md](../AGENTS.md) and the [README architecture structure](../README.md#architecture-structure)
+for the monorepo request flow and project boundaries. This file adds
 frontend-specific instructions only.
 
 ## Fast commands

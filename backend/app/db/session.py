@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 
 from loguru import logger
 from app.core.config import settings
+from app.db.tenant_guard import install_tenant_guard
 
 engine = create_async_engine(
     settings.DATABASE_URL,
@@ -19,6 +20,8 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
     autocommit=False,
 )
+
+install_tenant_guard()
 
 
 async def get_db() -> AsyncSession:

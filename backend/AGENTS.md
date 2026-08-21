@@ -1,8 +1,8 @@
 # Backend AGENTS.md
 
-See [root AGENTS.md](../AGENTS.md) for architecture boundaries, service layer rules,
-transaction conventions, logging, auth, and migration caveats. This file adds
-backend-specific instructions only.
+See [root AGENTS.md](../AGENTS.md) and the [README architecture structure](../README.md#architecture-structure)
+for architecture boundaries, service layer rules, transaction conventions, logging,
+auth, and migration caveats. This file adds backend-specific instructions only.
 
 ## Fast commands
 
@@ -46,6 +46,16 @@ backend/app/
 - Implement a private `_active_filter(self)` helper in each repository that returns the filter condition, and reuse it in every query.
 - Migration SQL must include `ALTER TABLE ... ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL` for any new table.
 
+## Multi-tenancy (required)
+
+- Every authenticated user belongs to **exactly one family** (`User.family_id`). Tenant identity comes ONLY from `current_user.family_id` — never trust a client-supplied family id.
+- Every tenant-owned model carry a `family_id` col (`expenses`, `categories`, `credit_cards`, `debts`).
+- Cross-family object access must return **404** (NotFoundException), not 403, to avoid resource enumeration.
+- Service methods must always take `family_id` and validate ownership before read/update/delete.
+- Global tenant guard: `app/db/tenant_guard.py` registers a `do_orm_execute` listener (on ORM `Session`) injecting `with_loader_criteria` (`family_id == active`) into every SELECT on tenant models. Gated by `ENABLE_GLOBAL_TENANT_GUARD`. Active family set in `get_current_user`, cleared by `app/dependencies/tenant.py::tenant_scope` (global dependency). Do NOT add `User`/`Installment`/`AuditLog` to the guarded set (auth needs cross-family user reads; the latter two have no `family_id`).
+- Per-request context lives in `app/core/tenant.py` (`set_tenant_context` / `get_tenant_context` / `clear_tenant_context`).
+- Add tenant-scoped composite indexes (lead with `family_id`) in new migrations, e.g. `migrations/sql/012_add_tenant_composite_indexes.sql`.
+
 ## Relevant skills
 
 - `.agents/skills/fastapi-patterns/` — authoritative backend patterns guide
@@ -58,8 +68,11 @@ backend/app/
 | `app/core/config.py` | Settings (env defaults) |
 | `app/core/security.py` | JWT + bcrypt |
 | `app/core/exceptions.py` | All exception classes + global handlers |
-| `app/dependencies/auth.py` | Auth + role-based authorization dependencies (`require_roles`) |
+| `app/dependencies/auth.py` | Auth + role-based authorization dependencies (`require_roles`, sets tenant context) |
 | `app/db/session.py` | Engine, sessionmaker, `get_db` |
+| `app/db/tenant_guard.py` | Global SQLAlchemy tenant guard (feature-flagged `with_loader_criteria`) |
+| `app/core/tenant.py` | Per-request tenant context (contextvar) |
+| `app/dependencies/tenant.py` | `tenant_scope` global dependency (clears tenant context after request) |
 | `app/dependencies/services.py` | Service DI factory functions |
 | `app/domains/services/expense_service.py` | Expense CRUD + CSV export (`list_by_family_csv`) |
 | `app/domains/services/category_service.py` | Category business logic (list/create/update/delete) |

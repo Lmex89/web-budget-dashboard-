@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
+    # Multi-tenancy
+    # Enables the global SQLAlchemy tenant guard (`with_loader_criteria`) that
+    # injects `family_id == <active family>` into every SELECT on tenant-owned
+    # models. Defense-in-depth safety net; keep service-level checks regardless.
+    ENABLE_GLOBAL_TENANT_GUARD: bool = False
+
     # Timezone
     TIMEZONE: str = "America/Merida"
 
