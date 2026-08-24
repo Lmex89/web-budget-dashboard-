@@ -30,6 +30,7 @@ You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_tas
 - Run backend migrations (from `backend/`): `python -m migrations.run_migrations`
 - Run backend locally (from `backend/`, venv active): `uvicorn app.main:app --reload`
 - Run frontend locally (from `frontend/`): `npm run dev`
+- Validate frontend (from `frontend/`): `npm run typecheck`, `npm run test`, `npm run build`
 - Run backend tests (from `backend/`): `pytest`
 - Backup database: `./backup-db.sh` (local `./backups/` + optional Backblaze B2 upload via rclone, both 30-day retention)
 - Restore database: `./restore-db.sh <backup-file>`
@@ -147,6 +148,7 @@ All backend code **must** follow SOLID principles:
 - Expense editing smoothly scrolls to the form, focuses the amount input, and highlights the active editing card/table row with an "Editing" badge and accent styling.
 - Date filter inputs on the expenses page use responsive widths (`w-full sm:w-40`) and `min-w-0` on flex children to prevent iOS Safari overflow.
 - Mobile bottom navigation in `frontend/src/components/layout/BottomNav.vue` must render icons/labels as native Vue template nodes (no `v-html` HTML injection) to keep all tabs visible on iOS Safari.
+- Mobile header avatar and desktop sidebar sign-out actions must await auth logout before navigating to `/login`; the mobile avatar is an accessible sign-out button.
 
 ## Git commit conventions (required)
 

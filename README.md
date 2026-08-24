@@ -83,6 +83,11 @@ docker compose exec backend python -m migrations.run_migrations
 
 # 5. API docs (auto-generated)
 # http://localhost:8000/docs
+
+# 6. Frontend validation (from frontend/)
+npm run typecheck
+npm run test
+npm run build
 ```
 
 ## First Time Setup

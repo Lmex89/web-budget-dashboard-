@@ -7,6 +7,14 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
+async function handleLogout() {
+  try {
+    await authStore.logout()
+  } finally {
+    await router.push('/login')
+  }
+}
+
 const navigation = computed(() => [
   { name: 'Dashboard', path: '/' },
   { name: 'Expenses', path: '/expenses' },
@@ -53,7 +61,8 @@ const navigation = computed(() => [
         </div>
       </div>
       <button
-        @click="authStore.logout(); router.push('/login')"
+        type="button"
+        @click="handleLogout"
         class="eb-btn eb-btn-ghost w-full text-xs"
       >
         Sign out

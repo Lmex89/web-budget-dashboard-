@@ -7,6 +7,7 @@ frontend-specific instructions only.
 ## Fast commands
 
 - Run dev server: `npm run dev`
+- Run frontend tests: `npm run test`
 - Build: `npm run build`
 - Type check: `npm run typecheck` (alias: `npx vue-tsc --noEmit`)
 - Docker dev: `docker compose up frontend` (uses `Dockerfile.dev`)
@@ -132,6 +133,7 @@ Composables in `src/composables/`:
 - **Auth**: Bearer token stored in `localStorage` (key `budget_access_token`), sent via axios request interceptor as `Authorization: Bearer <token>`. HttpOnly cookie retained as fallback. Pinia auth store calls `fetchCurrentUser()` on first load (auth header auto-attached). Router guard uses `authStore.authReady` + `isAuthenticated`.
 - **Roles**: User payload includes `role` (`admin` | `member` | `viewer`). Route-level role checks use `meta.requiredRoles` in `src/router/index.ts`.
 - **Axios 401 interceptor**: Clears auth state only (no `window.location.href` redirect to avoid reload loop). Redirect is handled by the router guard.
+- Logout actions await `authStore.logout()` before navigating to `/login`; the mobile header avatar is the accessible sign-out button.
 - **Routes**: Lazy-loaded via dynamic `import()`. Protected routes use `beforeEach` guard. Each route has `meta.title` for document title.
 - **No comments in code** unless explicitly requested.
 - **Debt API shape**: Keep debt request/response fields aligned with backend schema names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) instead of introducing frontend-only aliases.
