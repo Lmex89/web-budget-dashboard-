@@ -118,7 +118,7 @@ describe('DashboardView color assignment', () => {
     expect(colors[0]).not.toBe(colors[1])
   })
 
-  it('assigns distinct colors for 6 segments (>5 triggers "Otros")', async () => {
+  it('shows all segments without grouping into Others', async () => {
     const expenseStore = useExpenseStore()
     const categoryStore = useCategoryStore()
 
@@ -147,12 +147,43 @@ describe('DashboardView color assignment', () => {
     await wrapper.vm.$nextTick()
 
     const dots = wrapper.findAll('.segment-dot')
-    expect(dots.length).toBe(6)
+    expect(dots.length).toBe(7)
 
-    const visible = dots.filter((d) => d.attributes('data-name') !== 'Otros (2)')
-    const colors = visible.map((d) => d.attributes('data-color'))
+    const colors = dots.map((d) => d.attributes('data-color'))
     const unique = new Set(colors)
-    expect(unique.size).toBe(5)
+    expect(unique.size).toBe(7)
+  })
+
+  it('stacked bar shows top 5 + Others when more than 6 categories', async () => {
+    const expenseStore = useExpenseStore()
+    const categoryStore = useCategoryStore()
+
+    const names = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    categoryStore.categories = names.map((n, i) => makeCat(n, `c${i}`))
+    expenseStore.categoryDistribution = names.map((n, i) => makeDist(n, 100 * (7 - i)))
+
+    const wrapper = mount(DashboardView, {
+      global: {
+        plugins: [pinia],
+        stubs: {
+          StatCard: true,
+          CategoryStackedBar: {
+            props: ['segments'],
+            template: '<div><div v-for="s in segments" :key="s.categoryId" class="bar-segment" :data-color="s.color" :data-name="s.categoryName" /></div>',
+          },
+          RecentExpensesCard: true,
+          TopCategoriesCard: true,
+          ExpensesPieChart: true,
+        },
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 100))
+    await wrapper.vm.$nextTick()
+
+    const dots = wrapper.findAll('.bar-segment')
+    expect(dots.length).toBe(6)
 
     const others = dots.find((d) => d.attributes('data-name') === 'Otros (2)')
     expect(others?.attributes('data-color')).toBe('#8e8e93')

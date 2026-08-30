@@ -10,7 +10,7 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 
 ## Features
 
-- **Dashboard Overview** — Mobile-first responsive dashboard with expense summary, category breakdown (stacked bar), recent expenses, and top categories.
+- **Dashboard Overview** — Mobile-first responsive dashboard with expense summary, category breakdown (stacked bar with top 5 + "Otros" grouping), distribution pie chart (all categories), recent expenses, and top categories.
 - **Expense Management** — Create, read, update, and delete expenses with installment support.
 - **Categories** — Organize spending with custom categories; edit category names inline.
 - **Credit Cards** — Track card limits, closing days, and balances.

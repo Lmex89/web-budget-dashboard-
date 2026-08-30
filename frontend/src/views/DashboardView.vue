@@ -50,7 +50,7 @@ const summary = computed<DashboardSummary | null>(() => {
 
 const MAX_VISIBLE_SEGMENTS = 5
 
-const categorySegments = computed<CategoryBarSegment[]>(() => {
+const allSegments = computed<CategoryBarSegment[]>(() => {
   const dist = expenseStore.categoryDistribution
   const catMap = new Map(categoryStore.categories.map((c) => [c.name.toLowerCase(), c]))
   const segments: CategoryBarSegment[] = dist.map((d, i) => {
@@ -59,14 +59,20 @@ const categorySegments = computed<CategoryBarSegment[]>(() => {
   })
   segments.sort((a, b) => b.amount - a.amount)
   const total = segments.reduce((sum, s) => sum + s.amount, 0)
+  return segments.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 }))
+})
+
+const categorySegments = computed<CategoryBarSegment[]>(() => {
+  const segments = allSegments.value
   if (segments.length <= MAX_VISIBLE_SEGMENTS + 1) {
-    return segments.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 }))
+    return segments
   }
   const visible = segments.slice(0, MAX_VISIBLE_SEGMENTS)
   const others = segments.slice(MAX_VISIBLE_SEGMENTS)
   const othersAmount = others.reduce((sum, s) => sum + s.amount, 0)
+  const total = segments.reduce((sum, s) => sum + s.amount, 0)
   return [
-    ...visible.map((s) => ({ ...s, percentage: total > 0 ? (s.amount / total) * 100 : 0 })),
+    ...visible,
     {
       categoryId: others.map((s) => s.categoryId).join(','),
       categoryName: `Otros (${others.length})`,
@@ -77,7 +83,7 @@ const categorySegments = computed<CategoryBarSegment[]>(() => {
   ]
 })
 
-const topCategories = computed<CategoryBarSegment[]>(() => categorySegments.value.slice(0, 6))
+const topCategories = computed<CategoryBarSegment[]>(() => allSegments.value.slice(0, 6))
 
 const recentExpenses = computed<DashboardExpense[]>(() =>
   expenseStore.recentExpenses.map((e) => ({
@@ -225,7 +231,7 @@ function handleSegmentClick(categoryId: string) {
 
     <div class="animation-delay-500">
       <ExpensesPieChart
-        :segments="categorySegments"
+        :segments="allSegments"
         :total-label="monthLabel"
         :loading="loadingSegments"
         :error="error"

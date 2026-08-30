@@ -88,7 +88,7 @@ Located in `src/components/ui/`:
 | `PaperCard` | `filled?` | Styled card wrapper (uses `isolate` not `overflow-hidden` to avoid clipping date pickers) |
 | `MetricCard` | `label`, `value`, `caption?`, `tone?` | Dashboard metric display |
 | `StatCard` | `label`, `value`, `caption`, `tone?` | Mobile-first stat row/card |
-| `CategoryStackedBar` | `segments`, `total-label`, `loading`, `error` | Horizontal stacked bar with legend |
+| `CategoryStackedBar` | `segments`, `total-label`, `loading`, `error` | Horizontal stacked bar with legend (top 5 + "Otros" grouping when >6 categories) |
 | `RecentExpensesCard` | `expenses`, `loading`, `error` | Expense list card |
 | `TopCategoriesCard` | `categories`, `loading`, `error` | Top categories list card |
 | `EmptyState` | `title`, `description?`, slots `icon`, `action` | Empty data placeholder |
@@ -140,6 +140,7 @@ Composables in `src/composables/`:
 - **Expense category filter**: The expenses view uses `CategoryFilter` to select multiple categories. Selected IDs are joined with commas and sent as the `category_id` query parameter; the backend already supports single or multiple comma-separated category IDs.
 - **Expense deletion confirmation**: Expense deletion in both desktop table and mobile card views requires two-step confirmation (clicking Delete reveals Confirm and Cancel action buttons before dispatching the backend delete request).
 - **Expense edit focus & active indicators**: When editing an expense, the form scrolls into view, the amount input is automatically focused and selected, and the active item being edited is highlighted with an "Editing" badge and border/background highlights across mobile cards and desktop tables.
+- **Dashboard distribution charts**: The pie chart (`ExpensesPieChart`) shows all categories with individual colors. The stacked bar (`CategoryStackedBar`) groups categories beyond the top 5 into an "Otros (N)" segment. Both receive data from `DashboardView.vue` computed properties (`allSegments` and `categorySegments` respectively).
 
 ## Reactivity and TypeScript conventions
 
