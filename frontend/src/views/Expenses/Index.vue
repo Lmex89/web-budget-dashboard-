@@ -36,11 +36,13 @@ function parseQueryCategoryIds(value: unknown): string[] {
 }
 
 const queryCategoryIds = parseQueryCategoryIds(route.query.category_id)
+const queryStartDate = typeof route.query.start_date === 'string' ? route.query.start_date : ''
+const queryEndDate = typeof route.query.end_date === 'string' ? route.query.end_date : ''
 const selectedCategoryIds = ref<string[]>(
   queryCategoryIds.length > 0 ? queryCategoryIds : [...expenseStore.filterCategoryIds]
 )
-const filterStartDate = ref(expenseStore.filterStartDate || '')
-const filterEndDate = ref(expenseStore.filterEndDate || '')
+const filterStartDate = ref(queryStartDate || expenseStore.filterStartDate || '')
+const filterEndDate = ref(queryEndDate || expenseStore.filterEndDate || '')
 const editingId = ref<string | null>(null)
 const confirmingDeleteId = ref<string | null>(null)
 const deletingId = ref<string | null>(null)
@@ -204,8 +206,10 @@ async function exportCSV() {
   window.URL.revokeObjectURL(url)
 }
 
+const hasQueryFilters = queryCategoryIds.length > 0 || queryStartDate || queryEndDate
+
 onMounted(() => {
-  if (queryCategoryIds.length > 0) {
+  if (hasQueryFilters) {
     applyFilters()
   } else {
     fetchExpenses()

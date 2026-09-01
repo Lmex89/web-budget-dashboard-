@@ -138,7 +138,15 @@ async function handleRecentExpenseDelete(id: string) {
 
 function handleSegmentClick(categoryId: string) {
   if (!categoryId) return
-  router.push({ path: '/expenses', query: { category_id: categoryId } })
+  const { start, end } = monthDateRange(currentYear.value, currentMonth.value)
+  router.push({
+    path: '/expenses',
+    query: {
+      category_id: categoryId,
+      start_date: start,
+      end_date: end,
+    },
+  })
 }
 </script>
 
