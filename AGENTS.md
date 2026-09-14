@@ -8,10 +8,11 @@ Instructions for AI coding agents working in this repository.
 
 ## Project at a glance
 
-- Monorepo: FastAPI backend + Vue frontend + Docker Compose.
+- Monorepo: FastAPI backend + Vue frontend + React Native mobile client + Docker Compose.
 - Backend runtime: Python 3.13+.
 - Primary project documentation: [README.md](README.md).
 - Backend source root: [backend/app](backend/app).
+- Mobile source root: [mobile/src](mobile/src) (Expo 52, React Native, NativeWind, Zustand, TanStack Query, React Navigation).
 - Database: MariaDB 10.11+ via raw SQL migrations (no Alembic).
 - Timezone: America/Merida (CST, UTC-6). Set via `TZ` and `--default-time-zone` in `docker-compose.yml` + `TIMEZONE` in `backend/app/core/config.py`. Expense `date` and installment `due_date` use `DATETIME` (no conversion). Audit columns (`created_at`, `updated_at`) use `TIMESTAMP` (converted to local time by MariaDB).
 
@@ -32,10 +33,16 @@ You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_tas
 - Run frontend locally (from `frontend/`): `npm run dev`
 - Validate frontend (from `frontend/`): `npm run typecheck`, `npm run test`, `npm run build`
 - Run backend tests (from `backend/`): `pytest`
+- Start mobile app (from `mobile/`): `npm start` (Expo dev server)
+- Validate mobile (from `mobile/`): `npm run typecheck`, `npm run lint`
 - Backup database: `./backup-db.sh` (local `./backups/` + optional Backblaze B2 upload via rclone, both 30-day retention)
+- Backup database (Fish shell): `./backup-db.fish`
 - Restore database: `./restore-db.sh <backup-file>`
+- Cron entry template: `crontab-entry.txt` (daily 2 AM backup job)
 
 > **Local backend note:** All local backend commands require a `backend/.env` file. The default `DATABASE_URL` in `app/core/config.py` points to `localhost:3306`, but Docker Compose exposes MariaDB on host port `3308`. Copy `backend/.env.example` to `backend/.env` and adjust the port before running migrations or the dev server.
+>
+> **Docker backend port:** Docker Compose exposes the backend API on host port `8003` (container port `8000`). API docs are at `http://localhost:8003/docs`.
 >
 > **Docker secrets:** All sensitive/config values live in `.env.docker` (gitignored) at the project root. Every service in `docker-compose.yml` loads it via `env_file: .env.docker`. Copy `.env.docker.example` to `.env.docker` and edit it to change DB credentials, JWT secret, or other runtime config before running `docker compose up`.
 >
@@ -183,7 +190,7 @@ Follow **Conventional Commits 1.0.0** for every commit (see https://www.conventi
 
 ### Scope examples from this repo
 
-`dashboard`, `categories`, `auth`, `backend`, `frontend`, `expenses`, `debts`, `migrations`, `deps`
+`dashboard`, `categories`, `auth`, `backend`, `frontend`, `mobile`, `expenses`, `debts`, `migrations`, `deps`
 
 ### Examples
 
@@ -198,6 +205,16 @@ feat(api)!: change expense response envelope
 
 BREAKING CHANGE: expense list response now wraps data under `items` key
 ```
+
+## Mobile client
+
+- **Stack**: Expo 52, React Native 0.76, NativeWind 4 (Tailwind for RN), Zustand (state), TanStack Query (data fetching), React Navigation 7.
+- **Entry**: `mobile/App.tsx` → `mobile/src/app/providers.tsx` (QueryClient + theme) → `mobile/src/app/navigation.tsx` (bottom tabs).
+- **Screens**: `mobile/src/screens/` (Dashboard, Transactions, Recurring, Search).
+- **API client**: `mobile/src/services/api.ts` (Axios with auth interceptor).
+- **State**: Zustand stores in `mobile/src/stores/`, hooks in `mobile/src/hooks/`.
+- **Styling**: NativeWind/Tailwind classes + `cn()` utility (`mobile/src/utils/cn.ts`). Theme tokens in `mobile/src/constants/theme.ts`.
+- **Types**: Shared interfaces in `mobile/src/types/index.ts`.
 
 ## Docker optimization
 
@@ -233,3 +250,8 @@ BREAKING CHANGE: expense list response now wraps data under `items` key
 - Dashboard view: [frontend/src/views/DashboardView.vue](frontend/src/views/DashboardView.vue)
 - Dashboard components: [frontend/src/components/dashboard/](frontend/src/components/dashboard/)
 - Audit log view: [frontend/src/views/Logs/Index.vue](frontend/src/views/Logs/Index.vue)
+- Mobile navigation: [mobile/src/app/navigation.tsx](mobile/src/app/navigation.tsx)
+- Mobile providers: [mobile/src/app/providers.tsx](mobile/src/app/providers.tsx)
+- Mobile API client: [mobile/src/services/api.ts](mobile/src/services/api.ts)
+- Mobile screens: [mobile/src/screens/](mobile/src/screens/)
+- Mobile types: [mobile/src/types/index.ts](mobile/src/types/index.ts)

@@ -6,6 +6,7 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 
 - **Backend:** Python 3.13+, FastAPI, SQLAlchemy 2.0, MariaDB 10.11+
 - **Frontend:** Vue.js 3, Vite, Tailwind CSS, Pinia, Vue Router 4
+- **Mobile:** React Native (Expo 52), NativeWind 4, Zustand, TanStack Query, React Navigation 7
 - **Infra:** Docker, Docker Compose
 
 ## Features
@@ -56,7 +57,9 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 │       ├── services/            # Mobile API client
 │       └── stores/              # Mobile state stores
 ├── docker-compose.yml          # Local development orchestration
-├── backup-db.sh                # Database backup script
+├── backup-db.sh                # Database backup script (Bash)
+├── backup-db.fish              # Database backup script (Fish shell)
+├── crontab-entry.txt           # Cron job template (daily 2 AM backup)
 └── restore-db.sh               # Database restore script
 ```
 
@@ -64,7 +67,8 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 
 - [Docker](https://docs.docker.com/get-docker/) with Docker Compose
 - Python 3.13+ (for local backend development)
-- Node.js 20+ and npm (for local frontend development)
+- Node.js 20+ and npm (for local frontend and mobile development)
+- [Expo Go](https://expo.dev/go) app on a physical device (for mobile development)
 
 ## Quick Start
 
@@ -82,12 +86,17 @@ docker compose exec backend python -m migrations.run_migrations
 # http://localhost:5173
 
 # 5. API docs (auto-generated)
-# http://localhost:8000/docs
+# http://localhost:8003/docs
 
 # 6. Frontend validation (from frontend/)
 npm run typecheck
 npm run test
 npm run build
+
+# 7. Mobile app (from mobile/)
+npm start          # Expo dev server
+npm run typecheck  # TypeScript check
+npm run lint       # ESLint
 ```
 
 ## First Time Setup
@@ -193,7 +202,7 @@ Migrations are managed using raw SQL files in `backend/migrations/sql/`:
 
 ## Database Backup & Restore
 
-`backup-db.sh` dumps the DB to `./backups/` (30-day retention) and, when rclone
+`backup-db.sh` (Bash) and `backup-db.fish` (Fish shell) dump the DB to `./backups/` (30-day retention) and, when rclone
 is installed and B2 credentials are set, also uploads the dump to a Backblaze B2
 bucket (`lmex-backups-db/web-budget-family/`) with the same 30-day retention. If
 rclone or the credentials are missing, the script logs a warning and keeps the
@@ -201,7 +210,8 @@ local backup — the job never fails because of the cloud step.
 
 ```bash
 # Manual backup (dumps to ./backups/, then uploads to Backblaze B2 if configured)
-./backup-db.sh
+./backup-db.sh        # Bash
+./backup-db.fish      # Fish shell
 
 # List available backups
 ./restore-db.sh
@@ -209,7 +219,7 @@ local backup — the job never fails because of the cloud step.
 # Restore from a specific backup
 ./restore-db.sh backups/family_budget_20260715_020000.sql.gz
 
-# Cron job (daily at 2:00 AM)
+# Cron job (daily at 2:00 AM) — see crontab-entry.txt for template
 # Note: cron runs with minimal PATH, so set it at the top of crontab:
 crontab -e
 
@@ -259,6 +269,11 @@ uvicorn app.main:app --reload
 cd frontend
 npm install
 npm run dev
+
+# Mobile setup (in a separate terminal)
+cd mobile
+npm install
+npm start  # Expo dev server — scan QR code with Expo Go app
 ```
 
 ## Git Commit Conventions
@@ -274,7 +289,7 @@ This project follows **Conventional Commits**:
 ```
 
 - **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
-- **Scope:** area of codebase (`dashboard`, `categories`, `auth`, `backend`, `frontend`)
+- **Scope:** area of codebase (`dashboard`, `categories`, `auth`, `backend`, `frontend`, `mobile`)
 - **Description:** imperative mood, lowercase, no trailing period
 - **Example:** `feat(categories): add inline name editing from categories route`
 
