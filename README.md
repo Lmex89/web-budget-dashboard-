@@ -127,6 +127,8 @@ docker compose exec backend python -m migrations.seed
 
 > To rebuild from scratch: `docker compose down -v && docker compose up -d --build && docker compose exec backend python -m migrations.run_migrations && docker compose exec backend python -m migrations.seed`
 
+> **Resource limits:** Each service declares `deploy.resources` CPU/RAM limits tuned for a 4-thread laptop (db `1.0 CPU / 1024M`, backend `1.5 CPU / 768M`, frontend `0.5 CPU / 128M`). Check live usage with `docker stats`; if a service is OOM-killed, raise its `limits.memory` in `docker-compose.yml`, then `docker compose up -d`.
+
 ## Architecture Structure
 
 The application is organized as a client-server system. Both clients use the

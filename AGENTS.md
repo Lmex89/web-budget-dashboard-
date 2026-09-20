@@ -222,6 +222,7 @@ BREAKING CHANGE: expense list response now wraps data under `items` key
 - Backend build context is `./backend`. A `.dockerignore` file there excludes `__pycache__/`, `.venv`, `.env`, `tests/`, and IDE files from the build context.
 - Multi-stage build: builder installs deps with `--no-compile` and deletes `.pyc`/`__pycache__`; runtime stage clears `/var/cache/apk/`.
 - `mysql-client` is included at runtime for migration CLI. Consider a dedicated migration image if size becomes critical.
+- Every service declares `deploy.resources` limits/reservations in `docker-compose.yml`, tuned for an Intel i3-4005U (2c/4t) laptop with 15 GiB RAM: db `1.0 CPU / 1024M`, backend `1.5 CPU / 768M`, frontend `0.5 CPU / 128M` (total caps 3.0 of 4 CPUs, ~1.9 GiB RAM). Adjust these if the host or `db-config/custom.cnf` buffer pool changes.
 - Frontend dev uses `Dockerfile.dev` (hot-reload via `npm run dev -- --host`). Frontend prod uses `Dockerfile.prod` (multi-stage: node build → nginx alpine serve with SPA routing); the `frontend` service in `docker-compose.yml` builds `Dockerfile.prod`, so rebuild it after changing `VITE_API_BASE_URL` (`docker compose up -d --build frontend`).
 - **Frontend design**: The app uses an editorial/magazine aesthetic with mobile-first layout. See [frontend/AGENTS.md](frontend/AGENTS.md) for design tokens, component classes, and layout conventions.
 
