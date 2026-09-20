@@ -1,5 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import select, func, and_, desc
 from sqlalchemy.orm import selectinload, joinedload
@@ -291,3 +292,55 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         except SQLAlchemyError:
             logger.exception("Database error aggregating category spending")
             raise AppException("ERR_DATABASE", "Failed to compute category spending.")
+
+    async def get_monthly_spending_with_total(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+    ) -> dict:
+        logger.debug(f"Aggregating monthly spending with total: family={family_id}, {year}-{month:02d}")
+        from sqlalchemy import extract
+        try:
+            conditions = [
+                Expense.family_id == family_id,
+                self._active_filter(),
+                extract("year", Expense.date) == year,
+                extract("month", Expense.date) == month,
+            ]
+            stmt = (
+                select(
+                    Category.id.label("category_id"),
+                    Category.name,
+                    Category.color,
+                    func.coalesce(func.sum(Expense.amount), 0).label("category_total"),
+                    func.coalesce(func.sum(func.sum(Expense.amount)).over(), 0).label("grand_total"),
+                )
+                .join(Expense, Expense.category_id == Category.id)
+                .where(and_(*conditions))
+                .group_by(Category.id, Category.name, Category.color)
+                .order_by(desc("category_total"))
+            )
+            result = await self.db.execute(stmt)
+            rows = result.all()
+            logger.debug(f"Monthly spending has {len(rows)} categories")
+
+            total_expenses = rows[0].grand_total if rows else Decimal("0")
+            category_spending = [
+                {
+                    "category_id": row.category_id,
+                    "category": row.name,
+                    "color": row.color,
+                    "amount": row.category_total,
+                }
+                for row in rows
+            ]
+            return {
+                "total_expenses": total_expenses,
+                "year": year,
+                "month": month,
+                "category_spending": category_spending,
+            }
+        except SQLAlchemyError:
+            logger.exception("Database error aggregating monthly spending with total")
+            raise AppException("ERR_DATABASE", "Failed to compute monthly spending.")

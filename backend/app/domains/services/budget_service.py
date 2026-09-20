@@ -180,10 +180,9 @@ class BudgetService:
         year: int,
         month: int,
     ) -> dict:
-        summary = await self.uow.expenses.get_family_monthly_summary(family_id, year, month)
-        total_spent = summary["total_expenses"] or Decimal("0")
-        spending_rows = await self.uow.expenses.get_category_spending(family_id, year, month)
-        spending = {row["category_id"]: row["amount"] for row in spending_rows}
+        spending_data = await self.uow.expenses.get_monthly_spending_with_total(family_id, year, month)
+        total_spent = spending_data["total_expenses"] or Decimal("0")
+        spending = {row["category_id"]: row["amount"] for row in spending_data["category_spending"]}
 
         categories = []
         budgeted_ids = set()

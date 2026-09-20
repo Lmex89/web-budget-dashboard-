@@ -72,3 +72,12 @@ class ExpenseRepository(ABC):
         month: int,
     ) -> List[dict]:
         pass
+
+    @abstractmethod
+    async def get_monthly_spending_with_total(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+    ) -> dict:
+        pass
