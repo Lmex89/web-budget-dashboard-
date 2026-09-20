@@ -10,7 +10,7 @@ frontend-specific instructions only.
 - Run frontend tests: `npm run test`
 - Build: `npm run build`
 - Type check: `npm run typecheck` (alias: `npx vue-tsc --noEmit`)
-- Docker dev: `docker compose up frontend` (uses `Dockerfile.dev`)
+- Docker frontend (Compose builds `Dockerfile.prod` → nginx on `:5173`): `docker compose up -d --build frontend`
 - Docker prod build: `docker build -f Dockerfile.prod -t frontend:prod .`
 
 > **Note:** `npm run lint` is currently broken (missing `.gitignore` and ESLint config in this directory). Use `npm run typecheck` and `npm run build` for validation.
@@ -87,7 +87,7 @@ Located in `src/components/ui/`:
 | `PageHeader` | `title`, `subtitle?`, `eyebrow?`, slot `action` | Page title block with optional action button |
 | `PaperCard` | `filled?` | Styled card wrapper (uses `isolate` not `overflow-hidden` to avoid clipping date pickers) |
 | `MetricCard` | `label`, `value`, `caption?`, `tone?` | Dashboard metric display |
-| `StatCard` | `label`, `value`, `caption`, `tone?` | Mobile-first stat row/card |
+| `StatCard` | `label`, `value`, `caption`, `tone?` | Mobile-first stat row/card (`ink` / `accent` / `sage` / `danger` tones) |
 | `CategoryStackedBar` | `segments`, `total-label`, `loading`, `error` | Horizontal stacked bar with legend (top 5 + "Otros" grouping when >6 categories) |
 | `RecentExpensesCard` | `expenses`, `loading`, `error` | Expense list card |
 | `TopCategoriesCard` | `categories`, `loading`, `error` | Top categories list card |
@@ -138,6 +138,7 @@ Composables in `src/composables/`:
 - **No comments in code** unless explicitly requested.
 - **Debt API shape**: Keep debt request/response fields aligned with backend schema names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) instead of introducing frontend-only aliases.
 - **Expense category filter**: The expenses view uses `CategoryFilter` to select multiple categories. Selected IDs are joined with commas and sent as the `category_id` query parameter; the backend already supports single or multiple comma-separated category IDs.
+- **Budget view**: `views/Budget/Index.vue` loads `GET /budgets/progress` and upserts with `PUT /budgets/{year}/{month}` via `stores/budgets.ts`. Backend statuses (`on_track`, `warning`, `over`) map to `chip-sage` / `chip-warn` / `chip-danger` and `bg-sage` / `bg-warn` / `bg-danger` bars. The dashboard adds a "Budget left" `StatCard` when a budget exists for the selected month. `utils/budgetPresets.ts` defines fixed per-category prefill amounts (matched case-insensitively by category name, e.g. `coche` → 6139) applied when setting up a month that has no saved budget yet.
 - **Expense deletion confirmation**: Expense deletion in both desktop table and mobile card views requires two-step confirmation (clicking Delete reveals Confirm and Cancel action buttons before dispatching the backend delete request).
 - **Expense edit focus & active indicators**: When editing an expense, the form scrolls into view, the amount input is automatically focused and selected, and the active item being edited is highlighted with an "Editing" badge and border/background highlights across mobile cards and desktop tables.
 - **Dashboard distribution charts**: The pie chart (`ExpensesPieChart`) shows all categories with individual colors. The stacked bar (`CategoryStackedBar`) groups categories beyond the top 5 into an "Otros (N)" segment. Both receive data from `DashboardView.vue` computed properties (`allSegments` and `categorySegments` respectively).
@@ -179,6 +180,7 @@ frontend/src/
 │   └── api.ts              # Axios instance + interceptors
 ├── stores/
 │   ├── auth.ts        # Auth state (login, logout, fetchCurrentUser)
+│   ├── budgets.ts     # Monthly budget progress + upsert/delete
 │   ├── categories.ts  # Category list/create/update
 │   ├── creditCards.ts # Credit card list/create
 │   ├── debts.ts       # Debt list/create
@@ -195,6 +197,7 @@ frontend/src/
 ├── views/
 │   ├── Auth/          # Login, Register
 │   ├── Dashboard/     # Legacy dashboard (superseded by DashboardView.vue)
+│   ├── Budget/        # Monthly budget setup, progress, per-category limits
 │   ├── Expenses/
 │   ├── Categories/    # Category list with inline name editing
 │   ├── CreditCards/
@@ -203,6 +206,7 @@ frontend/src/
 │   ├── Logs/          # Audit log table with entity/action filters
 │       └── DashboardView.vue  # Mobile-first overview (uses real expense + category stores)
 ├── utils/
+│   ├── budgetPresets.ts  # Fixed per-category budget prefill amounts (matched by category name)
 │   └── format.ts      # Currency, date, month formatting
 ├── types/index.ts     # Shared TS interfaces
 └── style.css          # Tailwind imports + design tokens + component classes

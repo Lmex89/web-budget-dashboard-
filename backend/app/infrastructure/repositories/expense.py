@@ -248,3 +248,46 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         except SQLAlchemyError:
             logger.exception("Database error aggregating categories")
             raise AppException("ERR_DATABASE", "Failed to compute category distribution.")
+
+    async def get_category_spending(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+    ) -> List[dict]:
+        logger.debug(f"Aggregating category spending: family={family_id}, {year}-{month:02d}")
+        from sqlalchemy import extract
+        try:
+            conditions = [
+                Expense.family_id == family_id,
+                self._active_filter(),
+                extract("year", Expense.date) == year,
+                extract("month", Expense.date) == month,
+            ]
+            stmt = (
+                select(
+                    Category.id,
+                    Category.name,
+                    Category.color,
+                    func.coalesce(func.sum(Expense.amount), 0).label("total"),
+                )
+                .join(Expense, Expense.category_id == Category.id)
+                .where(and_(*conditions))
+                .group_by(Category.id, Category.name, Category.color)
+                .order_by(desc("total"))
+            )
+            result = await self.db.execute(stmt)
+            rows = result.all()
+            logger.debug(f"Category spending has {len(rows)} categories")
+            return [
+                {
+                    "category_id": row.id,
+                    "category": row.name,
+                    "color": row.color,
+                    "amount": row.total,
+                }
+                for row in rows
+            ]
+        except SQLAlchemyError:
+            logger.exception("Database error aggregating category spending")
+            raise AppException("ERR_DATABASE", "Failed to compute category spending.")

@@ -14,6 +14,7 @@ from app.domains.services.category_service import CategoryService
 from app.domains.services.credit_card_service import CreditCardService
 from app.domains.services.debt_service import DebtService
 from app.domains.services.audit_log_service import AuditLogService
+from app.domains.services.budget_service import BudgetService
 
 
 def get_expense_service(uow: IUnitOfWork = Depends(get_unit_of_work)) -> ExpenseService:
@@ -42,3 +43,7 @@ def get_debt_service(uow: IUnitOfWork = Depends(get_unit_of_work)) -> DebtServic
 
 def get_audit_log_service(uow: IUnitOfWork = Depends(get_unit_of_work)) -> AuditLogService:
     return AuditLogService(uow)
+
+
+def get_budget_service(uow: IUnitOfWork = Depends(get_unit_of_work)) -> BudgetService:
+    return BudgetService(uow)

@@ -145,6 +145,38 @@ class InstallmentMisconfigurationException(ValidationException):
 
 
 #
+# ─── Budget Exceptions ───────────────────────────────────────────────────────
+#
+
+class BudgetNotFoundException(NotFoundException):
+    def __init__(self, budget_id: str):
+        super().__init__("Budget", budget_id)
+
+
+class BudgetNotInFamilyException(NotFoundException):
+    """Raised when a budget exists but belongs to another family.
+
+    Returns 404 (not 403) to avoid leaking whether a cross-family resource
+    exists (anti-resource-enumeration).
+    """
+
+    def __init__(self, budget_id: str):
+        super().__init__("Budget", budget_id)
+
+
+class InvalidCategoryForBudgetException(ValidationException):
+    def __init__(self, category_id: str):
+        super().__init__(
+            f"Category '{category_id}' is not valid for this family or does not exist.",
+        )
+
+
+class InvalidBudgetPeriodException(ValidationException):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+#
 # ─── Serialization Helpers ───────────────────────────────────────────────────
 #
 

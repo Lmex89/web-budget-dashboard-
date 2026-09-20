@@ -7,7 +7,7 @@ const props = withDefaults(
     label: string
     value: string
     caption: string
-    tone?: 'ink' | 'accent' | 'sage'
+    tone?: 'ink' | 'accent' | 'sage' | 'danger'
   }>(),
   { tone: 'ink' }
 )
@@ -16,6 +16,7 @@ const valueClass = computed(() => ({
   'text-ink': props.tone === 'ink',
   'text-accent': props.tone === 'accent',
   'text-sage': props.tone === 'sage',
+  'text-danger': props.tone === 'danger',
 }))
 </script>
 

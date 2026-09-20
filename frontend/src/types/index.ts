@@ -201,3 +201,58 @@ export interface FetchAuditLogsParams {
   entity_type?: string
   action?: string
 }
+
+export type BudgetStatus = 'on_track' | 'warning' | 'over'
+
+export interface BudgetCategoryLimit {
+  category_id: string
+  amount: number
+}
+
+export interface BudgetCategoryEntry {
+  id: string
+  category_id: string
+  category_name: string
+  color: string | null
+  amount: number
+}
+
+export interface Budget {
+  id: string
+  family_id: string
+  year: number
+  month: number
+  total_budget: number
+  categories: BudgetCategoryEntry[]
+  created_at: string
+  updated_at: string
+}
+
+export interface CategoryBudgetProgress {
+  category_id: string
+  category_name: string
+  color: string | null
+  budget_amount: number
+  spent: number
+  remaining: number
+  percentage: number
+  status: BudgetStatus
+}
+
+export interface BudgetProgress {
+  budget_id: string
+  year: number
+  month: number
+  total_budget: number
+  total_spent: number
+  remaining: number
+  percentage: number
+  unbudgeted_spent: number
+  status: BudgetStatus
+  categories: CategoryBudgetProgress[]
+}
+
+export interface BudgetUpsertPayload {
+  total_budget: number
+  categories: BudgetCategoryLimit[]
+}

@@ -27,6 +27,12 @@ const nav: NavItem[] = [
     iconPaths: ['M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v.375c0 .621.504 1.125 1.125 1.125H4.5m0 0V6A2.25 2.25 0 016 3.75h.75m-1.5 15H6a2.25 2.25 0 01-2.25-2.25V6m3 0V4.5A2.25 2.25 0 016 2.25h.75m1.5 15V18a2.25 2.25 0 01-2.25 2.25H6M17.25 18.75V5.25m0 13.5a2.25 2.25 0 01-2.25-2.25V6m2.25 13.5V18a2.25 2.25 0 012.25-2.25h.75M20.25 6h.75a2.25 2.25 0 012.25 2.25v.75m-3 0V4.5a2.25 2.25 0 012.25-2.25h.75'],
   },
   {
+    name: 'Budget',
+    short: 'Budget',
+    path: '/budget',
+    iconPaths: ['M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z', 'M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z'],
+  },
+  {
     name: 'Categories',
     short: 'Tags',
     path: '/categories',
@@ -52,7 +58,10 @@ const visibleNav = computed(() => {
 })
 
 const navGridClass = computed(() => {
-  return visibleNav.value.length <= 3 ? 'grid-cols-3' : 'grid-cols-5'
+  const count = visibleNav.value.length
+  if (count <= 3) return 'grid-cols-3'
+  if (count === 4) return 'grid-cols-4'
+  return 'grid-cols-6'
 })
 
 const isActive = (path: string): boolean => {

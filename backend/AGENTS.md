@@ -45,6 +45,7 @@ backend/app/
 - Every query method **must** add `.where(model.deleted_at.is_(None))` to hide soft-deleted rows.
 - Implement a private `_active_filter(self)` helper in each repository that returns the filter condition, and reuse it in every query.
 - Migration SQL must include `ALTER TABLE ... ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL` for any new table.
+- Unique keys on soft-deletable rows (e.g. `uq_budgets_family_period`) still cover deleted rows, so re-inserting after a soft delete raises `IntegrityError`. Expose an `include_deleted` lookup on the repository and restore the existing row (`deleted_at = None`) instead of inserting — see `BudgetRepository.get_by_period` / `BudgetService.upsert`.
 
 ## Multi-tenancy (required)
 
@@ -52,7 +53,7 @@ backend/app/
 - Every tenant-owned model carry a `family_id` col (`expenses`, `categories`, `credit_cards`, `debts`).
 - Cross-family object access must return **404** (NotFoundException), not 403, to avoid resource enumeration.
 - Service methods must always take `family_id` and validate ownership before read/update/delete.
-- Global tenant guard: `app/db/tenant_guard.py` registers a `do_orm_execute` listener (on ORM `Session`) injecting `with_loader_criteria` (`family_id == active`) into every SELECT on tenant models. Gated by `ENABLE_GLOBAL_TENANT_GUARD`. Active family set in `get_current_user`, cleared by `app/dependencies/tenant.py::tenant_scope` (global dependency). Do NOT add `User`/`Installment`/`AuditLog` to the guarded set (auth needs cross-family user reads; the latter two have no `family_id`).
+- Global tenant guard: `app/db/tenant_guard.py` registers a `do_orm_execute` listener (on ORM `Session`) injecting `with_loader_criteria` (`family_id == active`) into every SELECT on tenant models. Gated by `ENABLE_GLOBAL_TENANT_GUARD`. Active family set in `get_current_user`, cleared by `app/dependencies/tenant.py::tenant_scope` (global dependency). Do NOT add `User`/`Installment`/`AuditLog`/`BudgetCategory` to the guarded set (auth needs cross-family user reads; the rest have no `family_id` and are reached only through tenant-owned relations). `Budget` is guarded because it carries `family_id`.
 - Per-request context lives in `app/core/tenant.py` (`set_tenant_context` / `get_tenant_context` / `clear_tenant_context`).
 - Add tenant-scoped composite indexes (lead with `family_id`) in new migrations, e.g. `migrations/sql/012_add_tenant_composite_indexes.sql`.
 
@@ -68,6 +69,7 @@ backend/app/
 | `app/core/config.py` | Settings (env defaults) |
 | `app/core/security.py` | JWT + bcrypt |
 | `app/core/exceptions.py` | All exception classes + global handlers |
+| `app/core/serialization.py` | `to_jsonable` Decimal→float helper for raw-dict API responses (budgets, analytics) |
 | `app/dependencies/auth.py` | Auth + role-based authorization dependencies (`require_roles`, sets tenant context) |
 | `app/db/session.py` | Engine, sessionmaker, `get_db` |
 | `app/db/tenant_guard.py` | Global SQLAlchemy tenant guard (feature-flagged `with_loader_criteria`) |
@@ -75,6 +77,10 @@ backend/app/
 | `app/dependencies/tenant.py` | `tenant_scope` global dependency (clears tenant context after request) |
 | `app/dependencies/services.py` | Service DI factory functions |
 | `app/domains/services/expense_service.py` | Expense CRUD + CSV export (`list_by_family_csv`) |
+| `app/domains/services/budget_service.py` | Monthly budget upsert, category-limit sync, progress computation |
+| `app/domains/repositories/budget.py` | Budget repository interface |
+| `app/infrastructure/repositories/budget.py` | SQLAlchemy budget repository implementation |
+| `app/api/v1/budgets.py` | Budget API endpoints (list, progress, upsert, delete) |
 | `app/domains/services/category_service.py` | Category business logic (list/create/update/delete) |
 | `app/domains/services/debt_service.py` | Debt business logic (list/create) |
 | `app/api/v1/expenses.py` | Good vertical slice example (CRUD, analytics, CSV export) |

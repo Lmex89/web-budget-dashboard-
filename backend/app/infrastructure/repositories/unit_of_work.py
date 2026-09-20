@@ -12,6 +12,7 @@ from app.infrastructure.repositories.family import SQLAlchemyFamilyRepository
 from app.infrastructure.repositories.user import SQLAlchemyUserRepository
 from app.infrastructure.repositories.audit_log import SQLAlchemyAuditLogRepository
 from app.infrastructure.repositories.installment import SQLAlchemyInstallmentRepository
+from app.infrastructure.repositories.budget import SQLAlchemyBudgetRepository
 
 
 class SQLAlchemyUnitOfWork(IUnitOfWork):
@@ -25,6 +26,7 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
         self._users = None
         self._audit_logs = None
         self._installments = None
+        self._budgets = None
 
     @property
     def expenses(self):
@@ -73,6 +75,12 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
         if self._installments is None:
             self._installments = SQLAlchemyInstallmentRepository(self._session)
         return self._installments
+
+    @property
+    def budgets(self):
+        if self._budgets is None:
+            self._budgets = SQLAlchemyBudgetRepository(self._session)
+        return self._budgets
 
     async def __aenter__(self) -> Self:
         logger.debug("Unit of Work started (transaction begin)")

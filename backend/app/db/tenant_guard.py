@@ -18,9 +18,9 @@ from sqlalchemy.orm import with_loader_criteria
 from loguru import logger
 from app.core.config import settings
 from app.core.tenant import get_tenant_context
-from app.models import Expense, Category, CreditCard, Debt
+from app.models import Expense, Category, CreditCard, Debt, Budget
 
-_TENANT_MODELS = (Expense, Category, CreditCard, Debt)
+_TENANT_MODELS = (Expense, Category, CreditCard, Debt, Budget)
 
 
 def _apply_tenant_guard(execute_state) -> None:

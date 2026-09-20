@@ -39,17 +39,16 @@ You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_tas
 - Backup database (Fish shell): `./backup-db.fish`
 - Restore database: `./restore-db.sh <backup-file>`
 - Cron entry template: `crontab-entry.txt` (daily 2 AM backup job)
+- Development guide: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+- Production guide: [docs/PRODUCTION.md](docs/PRODUCTION.md)
 
 > **Local backend note:** All local backend commands require a `backend/.env` file. The default `DATABASE_URL` in `app/core/config.py` points to `localhost:3306`, but Docker Compose exposes MariaDB on host port `3308`. Copy `backend/.env.example` to `backend/.env` and adjust the port before running migrations or the dev server.
 >
 > **Docker backend port:** Docker Compose exposes the backend API on host port `8003` (container port `8000`). API docs are at `http://localhost:8003/docs`.
 >
-> **Docker secrets:** All sensitive/config values live in `.env.docker` (gitignored) at the project root. Every service in `docker-compose.yml` loads it via `env_file: .env.docker`. Copy `.env.docker.example` to `.env.docker` and edit it to change DB credentials, JWT secret, or other runtime config before running `docker compose up`.
+> **Docker secrets:** All sensitive/config values live in `.env.docker` (gitignored) at the project root. Every service in `docker-compose.yml` loads it via `env_file: .env.docker`. Copy `.env.docker.example` to `.env.docker` and edit it to change DB credentials, JWT secret, or other runtime config before running `docker compose up`. Also link it as `.env` (`ln -sf .env.docker .env`) so Docker Compose variable interpolation (e.g. the frontend `VITE_API_BASE_URL` build arg) resolves without extra CLI flags.
 >
-> **Frontend API URL (`VITE_API_BASE_URL`):** Defined in `.env.docker` as the single source of truth. The frontend has no hardcoded fallback — it reads exclusively from `import.meta.env.VITE_API_BASE_URL`. For dev (`docker compose up`) the `env_file` passes it at runtime. For prod builds (`docker compose --profile prod`), you **must** pass `--env-file .env.docker` so the build arg resolves:
-> ```bash
-> docker compose --env-file .env.docker --profile prod up -d
-> ```
+> **Frontend API URL (`VITE_API_BASE_URL`):** Defined in `.env.docker` as the single source of truth and baked into the frontend bundle at build time. Vite inlines it, and the frontend reads exclusively from `import.meta.env.VITE_API_BASE_URL` (no hardcoded fallback). Docker Compose only interpolates variables from the project `.env` file, so `.env.docker` must be linked as `.env` (`ln -sf .env.docker .env`; both files are gitignored). After changing `VITE_API_BASE_URL`, rebuild the frontend: `docker compose up -d --build frontend`.
 
 ## Architecture boundaries (required)
 
@@ -80,6 +79,7 @@ Each domain concern gets its own focused service class:
 | `CreditCardService` | Family-scoped credit card list and create |
 | `DebtService` | Family-scoped debt list and create |
 | `ExpenseService` | CRUD for expenses, validation, family-scoping, CSV export |
+| `BudgetService` | Monthly budget upsert, per-category limit sync, budget-vs-actual progress |
 | `InstallmentService` | Installment generation, overdue detection, status tracking |
 | `AnalyticsService` | Monthly summaries, category distributions, trends, card utilization |
 | `AuditLogService` | Family-scoped audit log list with entity/action filters |
@@ -147,6 +147,7 @@ All backend code **must** follow SOLID principles:
 - Keep API response envelope consistency with schemas in [backend/app/schemas/common.py](backend/app/schemas/common.py).
 - Money values use Decimal/Numeric in domain and schema models (see [backend/app/models/__init__.py](backend/app/models/__init__.py) and [backend/app/schemas/expense.py](backend/app/schemas/expense.py)); avoid introducing float math in business logic.
 - Custom exception classes are organized by domain in [backend/app/core/exceptions.py](backend/app/core/exceptions.py).
+- Routes that return raw dicts containing Decimal (budgets progress, analytics) must pass them through `to_jsonable` from [backend/app/core/serialization.py](backend/app/core/serialization.py) before returning; Pydantic schemas handle conversion automatically.
 - Debt API/frontend payloads should preserve backend field names (`original_amount`, `remaining_amount`, `counterparty_name`, `type`, `status`) to avoid adapter drift in `frontend/src/stores/debts.ts` and debt views.
 - Category names can be edited inline from the Categories route; the backend enforces family ownership and name uniqueness on update.
 - Category delete is a soft delete and is blocked if the category still has active expenses. Reassign or delete those expenses first.
@@ -221,7 +222,7 @@ BREAKING CHANGE: expense list response now wraps data under `items` key
 - Backend build context is `./backend`. A `.dockerignore` file there excludes `__pycache__/`, `.venv`, `.env`, `tests/`, and IDE files from the build context.
 - Multi-stage build: builder installs deps with `--no-compile` and deletes `.pyc`/`__pycache__`; runtime stage clears `/var/cache/apk/`.
 - `mysql-client` is included at runtime for migration CLI. Consider a dedicated migration image if size becomes critical.
-- Frontend dev uses `Dockerfile.dev` (hot-reload via `npm run dev -- --host`). Frontend prod uses `Dockerfile.prod` (multi-stage: node build → nginx alpine serve with SPA routing).
+- Frontend dev uses `Dockerfile.dev` (hot-reload via `npm run dev -- --host`). Frontend prod uses `Dockerfile.prod` (multi-stage: node build → nginx alpine serve with SPA routing); the `frontend` service in `docker-compose.yml` builds `Dockerfile.prod`, so rebuild it after changing `VITE_API_BASE_URL` (`docker compose up -d --build frontend`).
 - **Frontend design**: The app uses an editorial/magazine aesthetic with mobile-first layout. See [frontend/AGENTS.md](frontend/AGENTS.md) for design tokens, component classes, and layout conventions.
 
 ## Migration and schema caveat
@@ -241,13 +242,19 @@ BREAKING CHANGE: expense list response now wraps data under `items` key
 - Frontend dev Docker: [frontend/Dockerfile.dev](frontend/Dockerfile.dev)
 - Frontend prod Docker: [frontend/Dockerfile.prod](frontend/Dockerfile.prod) + [frontend/nginx.conf](frontend/nginx.conf)
 - Expense API flow (good vertical slice): [backend/app/api/v1/expenses.py](backend/app/api/v1/expenses.py)
+- Budget API flow: [backend/app/api/v1/budgets.py](backend/app/api/v1/budgets.py)
+- Budget service: [backend/app/domains/services/budget_service.py](backend/app/domains/services/budget_service.py)
+- Budget repository: [backend/app/infrastructure/repositories/budget.py](backend/app/infrastructure/repositories/budget.py)
 - Debt API flow (list/create): [backend/app/api/v1/debts.py](backend/app/api/v1/debts.py)
 - Category API flow (list/create/update/delete): [backend/app/api/v1/categories.py](backend/app/api/v1/categories.py)
 - Audit log API flow (list): [backend/app/api/v1/audit_logs.py](backend/app/api/v1/audit_logs.py)
 - Service layer entry point: [backend/app/dependencies/services.py](backend/app/dependencies/services.py)
 - Domain models (all entities): [backend/app/models/\_\_init\_\_.py](backend/app/models/__init__.py)
 - Exception hierarchy: [backend/app/core/exceptions.py](backend/app/core/exceptions.py)
+- Decimal-safe JSON helper: [backend/app/core/serialization.py](backend/app/core/serialization.py)
 - Dashboard view: [frontend/src/views/DashboardView.vue](frontend/src/views/DashboardView.vue)
+- Budget view: [frontend/src/views/Budget/Index.vue](frontend/src/views/Budget/Index.vue)
+- Budget store: [frontend/src/stores/budgets.ts](frontend/src/stores/budgets.ts)
 - Dashboard components: [frontend/src/components/dashboard/](frontend/src/components/dashboard/)
 - Audit log view: [frontend/src/views/Logs/Index.vue](frontend/src/views/Logs/Index.vue)
 - Mobile navigation: [mobile/src/app/navigation.tsx](mobile/src/app/navigation.tsx)

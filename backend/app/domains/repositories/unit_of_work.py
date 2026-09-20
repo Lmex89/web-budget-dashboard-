@@ -9,6 +9,7 @@ from app.domains.repositories.family import FamilyRepository
 from app.domains.repositories.user import UserRepository
 from app.domains.repositories.audit_log import AuditLogRepository
 from app.domains.repositories.installment import InstallmentRepository
+from app.domains.repositories.budget import BudgetRepository
 
 
 class IUnitOfWork(ABC):
@@ -20,6 +21,7 @@ class IUnitOfWork(ABC):
     users: UserRepository
     audit_logs: AuditLogRepository
     installments: InstallmentRepository
+    budgets: BudgetRepository
 
     async def __aenter__(self) -> Self:
         return self

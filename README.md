@@ -11,13 +11,19 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 
 ## Features
 
-- **Dashboard Overview** — Mobile-first responsive dashboard with expense summary, category breakdown (stacked bar with top 5 + "Otros" grouping), distribution pie chart (all categories), recent expenses, and top categories.
+- **Dashboard Overview** — Mobile-first responsive dashboard with expense summary, category breakdown (stacked bar with top 5 + "Otros" grouping), distribution pie chart (all categories), recent expenses, top categories, and remaining budget.
 - **Expense Management** — Create, read, update, and delete expenses with installment support.
+- **Monthly Budgets** — Set a total monthly budget plus per-category limits; track budget-vs-actual progress with on track / near limit / over budget statuses and unbudgeted spending.
 - **Categories** — Organize spending with custom categories; edit category names inline.
 - **Credit Cards** — Track card limits, closing days, and balances.
 - **Debts** — Manage family loans and IOUs with counterparty tracking.
 - **Family Sharing** — Multi-user families with JWT-based authentication (Bearer token + HttpOnly cookie fallback, 30-day token expiry).
 - **Role-based Access** — Simple RBAC with three roles: `admin`, `member`, `viewer`.
+
+## Documentation
+
+- [Development Guide](docs/DEVELOPMENT.md) — local setup, hot reload, tests, database, troubleshooting
+- [Production Guide](docs/PRODUCTION.md) — deployment, updates, hardening, backups
 
 ## Project Structure
 
@@ -73,16 +79,16 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 ## Quick Start
 
 ```bash
-# 1. Start all services (dev mode with hot-reload)
-docker compose up -d
+# 1. Link the Docker env file so Compose interpolation (build args) resolves
+ln -sf .env.docker .env
 
-# 2. Start in production mode (nginx-served frontend on port 92)
-docker compose --env-file .env.docker --profile prod up -d
+# 2. Start all services (backend hot-reload + nginx frontend)
+docker compose up -d
 
 # 3. Run database migrations
 docker compose exec backend python -m migrations.run_migrations
 
-# 4. Open frontend (dev)
+# 4. Open frontend
 # http://localhost:5173
 
 # 5. API docs (auto-generated)
@@ -104,6 +110,7 @@ npm run lint       # ESLint
 ```bash
 # 1. Create config from template (edit secrets if needed)
 cp .env.docker.example .env.docker
+ln -sf .env.docker .env
 
 # 2. Start all services
 docker compose up -d
@@ -248,33 +255,8 @@ BACK_BLAZE_DIR=web-budget-family
 
 ## Local Development
 
-```bash
-# Backend setup
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-
-# Create a local .env file (see .env.example)
-cp .env.example .env
-# Edit .env if needed; the default connects to the Docker Compose DB on host port 3308.
-
-# Run migrations
-python -m migrations.run_migrations
-
-# Start backend dev server
-uvicorn app.main:app --reload
-
-# Frontend setup (in a separate terminal)
-cd frontend
-npm install
-npm run dev
-
-# Mobile setup (in a separate terminal)
-cd mobile
-npm install
-npm start  # Expo dev server — scan QR code with Expo Go app
-```
+See the [Development Guide](docs/DEVELOPMENT.md) for the full local workflow (Docker backend with
+Vite hot reload, or a fully local backend), tests, migrations, and troubleshooting.
 
 ## Git Commit Conventions
 

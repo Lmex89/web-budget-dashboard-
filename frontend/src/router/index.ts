@@ -35,6 +35,12 @@ const router = createRouter({
           meta: { title: 'Expenses' },
         },
         {
+          path: 'budget',
+          name: 'Budget',
+          component: () => import('@/views/Budget/Index.vue'),
+          meta: { title: 'Budget' },
+        },
+        {
           path: 'categories',
           name: 'Categories',
           component: () => import('@/views/Categories/Index.vue'),

@@ -63,3 +63,12 @@ class ExpenseRepository(ABC):
         category_id: Optional[str] = None,
     ) -> List[dict]:
         pass
+
+    @abstractmethod
+    async def get_category_spending(
+        self,
+        family_id: str,
+        year: int,
+        month: int,
+    ) -> List[dict]:
+        pass

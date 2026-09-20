@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useExpenseStore } from '@/stores/expenses'
 import { useCategoryStore } from '@/stores/categories'
+import { useBudgetStore } from '@/stores/budgets'
 import { useAuthStore } from '@/stores/auth'
 import StatCard from '@/components/dashboard/StatCard.vue'
 import CategoryStackedBar from '@/components/dashboard/CategoryStackedBar.vue'
@@ -16,6 +17,7 @@ import type { CategoryBarSegment, DashboardExpense, DashboardSummary } from '@/t
 
 const expenseStore = useExpenseStore()
 const categoryStore = useCategoryStore()
+const budgetStore = useBudgetStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const { formatCurrency } = useCurrency()
@@ -46,6 +48,21 @@ const summary = computed<DashboardSummary | null>(() => {
     month: ms.month,
     year: ms.year,
   }
+})
+
+const budgetProgress = computed(() => budgetStore.progress)
+
+const budgetTone = computed<'sage' | 'accent' | 'danger'>(() => {
+  const status = budgetProgress.value?.status
+  if (status === 'over') return 'danger'
+  if (status === 'warning') return 'accent'
+  return 'sage'
+})
+
+const budgetCaption = computed(() => {
+  const progress = budgetProgress.value
+  if (!progress) return ''
+  return `${progress.percentage.toFixed(0)}% of ${formatCurrency(progress.total_budget)} used`
 })
 
 const MAX_VISIBLE_SEGMENTS = 5
@@ -114,6 +131,7 @@ async function loadAll() {
       expenseStore.fetchMonthlySummary(currentYear.value, currentMonth.value, catId),
       expenseStore.fetchCategoryDistribution(currentYear.value, currentMonth.value, catId),
       expenseStore.fetchRecentExpenses({ page: 1, page_size: 5, start_date: start, end_date: end, category_id: catId }),
+      budgetStore.fetchProgress(currentYear.value, currentMonth.value),
     ])
   } catch {
     error.value = 'Failed to load dashboard data'
@@ -206,6 +224,14 @@ function handleSegmentClick(categoryId: string) {
            :value="String(summary?.familyMembersCount || 0)"
           caption="Sharing this budget"
           tone="sage"
+        />
+      </div>
+      <div v-if="budgetProgress" class="animation-delay-400">
+        <StatCard
+          label="Budget left"
+          :value="formatCurrency(budgetProgress.remaining)"
+          :caption="budgetCaption"
+          :tone="budgetTone"
         />
       </div>
     </div>

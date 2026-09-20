@@ -18,6 +18,7 @@ async function handleLogout() {
 const navigation = computed(() => [
   { name: 'Dashboard', path: '/' },
   { name: 'Expenses', path: '/expenses' },
+  { name: 'Budget', path: '/budget' },
   { name: 'Categories', path: '/categories' },
   ...(authStore.isAdmin ? [{ name: 'Settings', path: '/settings' }, { name: 'Logs', path: '/logs' }] : []),
 ])
