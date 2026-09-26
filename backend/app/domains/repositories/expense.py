@@ -81,3 +81,7 @@ class ExpenseRepository(ABC):
         month: int,
     ) -> dict:
         pass
+
+    @abstractmethod
+    async def get_monthly_trend(self, family_id: str, year: int) -> List[dict]:
+        pass

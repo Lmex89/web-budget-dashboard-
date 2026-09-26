@@ -5,12 +5,13 @@ FastAPI application following Clean Architecture and SOLID principles.
 ## Tech stack
 
 - **Runtime:** Python 3.13+
-- **Framework:** FastAPI 0.115
+- **Framework:** FastAPI 0.141.1
 - **ORM:** SQLAlchemy 2.0 (async)
 - **Database:** MariaDB 10.11+
 - **Auth:** JWT (Bearer header + HttpOnly cookie fallback) + bcrypt
-- **Validation:** Pydantic 2
-- **Logging:** Loguru
+- **Validation:** Pydantic 2.13.5
+- **ASGI server:** Uvicorn 0.54.0
+- **Logging:** Loguru 0.7.3
 - **Testing:** pytest + pytest-asyncio (see `tests/`)
 
 ## Multi-tenancy
@@ -79,6 +80,7 @@ python -m migrations.run_migrations    # Run DB migrations
 # Testing
 pytest                                 # Run all tests
 pytest -v                              # Verbose
+pytest tests/test_smoke_dashboard.py -v  # Dashboard API smoke tests (DB + seed required)
 ```
 
 ## Environment variables

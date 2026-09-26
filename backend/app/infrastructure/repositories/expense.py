@@ -2,7 +2,7 @@ from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import select, func, and_, desc
+from sqlalchemy import select, func, and_, desc, extract
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,6 +25,12 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             return None
         ids = [c.strip() for c in category_id.split(",") if c.strip()]
         return ids if ids else None
+
+    @staticmethod
+    def _month_bounds(year: int, month: int) -> tuple[datetime, datetime]:
+        start = datetime(year, month, 1)
+        end = datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
+        return start, end
 
     async def get_by_id(self, expense_id: str) -> Optional[Expense]:
         logger.debug(f"Querying expense by id: {expense_id}")
@@ -189,13 +195,13 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         category_id: Optional[str] = None,
     ) -> dict:
         logger.debug(f"Aggregating monthly summary: family={family_id}, {year}-{month:02d}")
-        from sqlalchemy import extract
         try:
+            month_start, next_month_start = self._month_bounds(year, month)
             conditions = [
                 Expense.family_id == family_id,
                 self._active_filter(),
-                extract("year", Expense.date) == year,
-                extract("month", Expense.date) == month,
+                Expense.date >= month_start,
+                Expense.date < next_month_start,
             ]
             if category_id:
                 conditions.append(Expense.category_id == category_id)
@@ -218,13 +224,13 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         category_id: Optional[str] = None,
     ) -> List[dict]:
         logger.debug(f"Aggregating category distribution: family={family_id}, {year}-{month:02d}")
-        from sqlalchemy import extract
         try:
+            month_start, next_month_start = self._month_bounds(year, month)
             conditions = [
                 Expense.family_id == family_id,
                 self._active_filter(),
-                extract("year", Expense.date) == year,
-                extract("month", Expense.date) == month,
+                Expense.date >= month_start,
+                Expense.date < next_month_start,
             ]
             if category_id:
                 conditions.append(Expense.category_id == category_id)
@@ -257,13 +263,13 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         month: int,
     ) -> List[dict]:
         logger.debug(f"Aggregating category spending: family={family_id}, {year}-{month:02d}")
-        from sqlalchemy import extract
         try:
+            month_start, next_month_start = self._month_bounds(year, month)
             conditions = [
                 Expense.family_id == family_id,
                 self._active_filter(),
-                extract("year", Expense.date) == year,
-                extract("month", Expense.date) == month,
+                Expense.date >= month_start,
+                Expense.date < next_month_start,
             ]
             stmt = (
                 select(
@@ -300,13 +306,13 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         month: int,
     ) -> dict:
         logger.debug(f"Aggregating monthly spending with total: family={family_id}, {year}-{month:02d}")
-        from sqlalchemy import extract
         try:
+            month_start, next_month_start = self._month_bounds(year, month)
             conditions = [
                 Expense.family_id == family_id,
                 self._active_filter(),
-                extract("year", Expense.date) == year,
-                extract("month", Expense.date) == month,
+                Expense.date >= month_start,
+                Expense.date < next_month_start,
             ]
             stmt = (
                 select(
@@ -344,3 +350,33 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         except SQLAlchemyError:
             logger.exception("Database error aggregating monthly spending with total")
             raise AppException("ERR_DATABASE", "Failed to compute monthly spending.")
+
+    async def get_monthly_trend(self, family_id: str, year: int) -> List[dict]:
+        logger.debug(f"Aggregating monthly trend: family={family_id}, year={year}")
+        try:
+            month_expr = extract("month", Expense.date)
+            stmt = (
+                select(
+                    month_expr.label("month"),
+                    func.coalesce(func.sum(Expense.amount), 0).label("total"),
+                )
+                .where(
+                    and_(
+                        Expense.family_id == family_id,
+                        self._active_filter(),
+                        Expense.date >= datetime(year, 1, 1),
+                        Expense.date < datetime(year + 1, 1, 1),
+                    )
+                )
+                .group_by(month_expr)
+            )
+            result = await self.db.execute(stmt)
+            totals = {int(row.month): row.total for row in result.all()}
+            logger.debug(f"Monthly trend for {year} has {len(totals)} active months")
+            return [
+                {"year": year, "month": month, "total_expenses": totals.get(month, Decimal("0"))}
+                for month in range(1, 13)
+            ]
+        except SQLAlchemyError:
+            logger.exception("Database error aggregating monthly trend")
+            raise AppException("ERR_DATABASE", "Failed to compute monthly trend.")

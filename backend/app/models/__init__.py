@@ -55,11 +55,11 @@ class Family(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    users: Mapped[list["User"]] = relationship(back_populates="family", lazy="selectin")
-    categories: Mapped[list["Category"]] = relationship(back_populates="family", lazy="selectin")
-    expenses: Mapped[list["Expense"]] = relationship(back_populates="family", lazy="selectin")
-    credit_cards: Mapped[list["CreditCard"]] = relationship(back_populates="family", lazy="selectin")
-    debts: Mapped[list["Debt"]] = relationship(back_populates="family", lazy="selectin")
+    users: Mapped[list["User"]] = relationship(back_populates="family", lazy="raise")
+    categories: Mapped[list["Category"]] = relationship(back_populates="family", lazy="raise")
+    expenses: Mapped[list["Expense"]] = relationship(back_populates="family", lazy="raise")
+    credit_cards: Mapped[list["CreditCard"]] = relationship(back_populates="family", lazy="raise")
+    debts: Mapped[list["Debt"]] = relationship(back_populates="family", lazy="raise")
 
 
 class User(Base):
@@ -84,12 +84,12 @@ class User(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    family: Mapped["Family"] = relationship(back_populates="users")
-    expenses: Mapped[list["Expense"]] = relationship(back_populates="user", lazy="selectin")
+    family: Mapped["Family"] = relationship(back_populates="users", lazy="raise")
+    expenses: Mapped[list["Expense"]] = relationship(back_populates="user", lazy="raise")
     debts_created: Mapped[list["Debt"]] = relationship(
         foreign_keys="Debt.created_by_user_id",
         back_populates="created_by",
-        lazy="selectin"
+        lazy="raise"
     )
 
 
@@ -106,10 +106,10 @@ class Category(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    family: Mapped["Family"] = relationship(back_populates="categories")
-    parent: Mapped["Category | None"] = relationship(remote_side=[id], back_populates="children", lazy="joined")
-    children: Mapped[list["Category"]] = relationship(back_populates="parent", lazy="selectin")
-    expenses: Mapped[list["Expense"]] = relationship(back_populates="category", lazy="selectin")
+    family: Mapped["Family"] = relationship(back_populates="categories", lazy="raise")
+    parent: Mapped["Category | None"] = relationship(remote_side=[id], back_populates="children", lazy="raise")
+    children: Mapped[list["Category"]] = relationship(back_populates="parent", lazy="raise")
+    expenses: Mapped[list["Expense"]] = relationship(back_populates="category", lazy="raise")
 
 
 class CreditCard(Base):
@@ -131,9 +131,9 @@ class CreditCard(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    family: Mapped["Family"] = relationship(back_populates="credit_cards")
-    expenses: Mapped[list["Expense"]] = relationship(back_populates="credit_card", lazy="selectin")
-    installments: Mapped[list["Installment"]] = relationship(back_populates="credit_card", lazy="selectin")
+    family: Mapped["Family"] = relationship(back_populates="credit_cards", lazy="raise")
+    expenses: Mapped[list["Expense"]] = relationship(back_populates="credit_card", lazy="raise")
+    installments: Mapped[list["Installment"]] = relationship(back_populates="credit_card", lazy="raise")
 
 
 class Expense(Base):
@@ -163,12 +163,12 @@ class Expense(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    family: Mapped["Family"] = relationship(back_populates="expenses")
-    user: Mapped["User"] = relationship(back_populates="expenses")
-    category: Mapped["Category"] = relationship(back_populates="expenses")
-    credit_card: Mapped["CreditCard | None"] = relationship(back_populates="expenses")
-    debt: Mapped["Debt | None"] = relationship(back_populates="expenses")
-    installments: Mapped[list["Installment"]] = relationship(back_populates="expense", lazy="selectin")
+    family: Mapped["Family"] = relationship(back_populates="expenses", lazy="raise")
+    user: Mapped["User"] = relationship(back_populates="expenses", lazy="raise")
+    category: Mapped["Category"] = relationship(back_populates="expenses", lazy="raise")
+    credit_card: Mapped["CreditCard | None"] = relationship(back_populates="expenses", lazy="raise")
+    debt: Mapped["Debt | None"] = relationship(back_populates="expenses", lazy="raise")
+    installments: Mapped[list["Installment"]] = relationship(back_populates="expense", lazy="raise")
 
 
 class Installment(Base):
@@ -181,13 +181,16 @@ class Installment(Base):
     total_installments: Mapped[int] = mapped_column(Integer, nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    status: Mapped[InstallmentStatus] = mapped_column(Enum(InstallmentStatus), default=InstallmentStatus.PENDING)
+    status: Mapped[InstallmentStatus] = mapped_column(
+        Enum(InstallmentStatus, values_callable=lambda obj: [e.value for e in obj]),
+        default=InstallmentStatus.PENDING,
+    )
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    expense: Mapped["Expense"] = relationship(back_populates="installments")
-    credit_card: Mapped["CreditCard | None"] = relationship(back_populates="installments")
+    expense: Mapped["Expense"] = relationship(back_populates="installments", lazy="raise")
+    credit_card: Mapped["CreditCard | None"] = relationship(back_populates="installments", lazy="raise")
 
 
 class Debt(Base):
@@ -199,8 +202,14 @@ class Debt(Base):
     original_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     remaining_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="USD")
-    type: Mapped[DebtType] = mapped_column(Enum(DebtType), nullable=False)
-    status: Mapped[DebtStatus] = mapped_column(Enum(DebtStatus), default=DebtStatus.ACTIVE)
+    type: Mapped[DebtType] = mapped_column(
+        Enum(DebtType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
+    status: Mapped[DebtStatus] = mapped_column(
+        Enum(DebtStatus, values_callable=lambda obj: [e.value for e in obj]),
+        default=DebtStatus.ACTIVE,
+    )
     counterparty_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     family_id: Mapped[str] = mapped_column(ForeignKey("families.id", ondelete="CASCADE"), nullable=False)
     created_by_user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -212,9 +221,9 @@ class Debt(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    family: Mapped["Family"] = relationship(back_populates="debts")
-    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id], back_populates="debts_created")
-    expenses: Mapped[list["Expense"]] = relationship(back_populates="debt", lazy="selectin")
+    family: Mapped["Family"] = relationship(back_populates="debts", lazy="raise")
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id], back_populates="debts_created", lazy="raise")
+    expenses: Mapped[list["Expense"]] = relationship(back_populates="debt", lazy="raise")
 
 
 class AuditLog(Base):
@@ -230,7 +239,7 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship(lazy="raise")
 
 
 class Budget(Base):
@@ -250,7 +259,7 @@ class Budget(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    family: Mapped["Family"] = relationship()
+    family: Mapped["Family"] = relationship(lazy="raise")
     categories: Mapped[list["BudgetCategory"]] = relationship(back_populates="budget", lazy="selectin")
 
 
@@ -272,5 +281,5 @@ class BudgetCategory(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
 
-    budget: Mapped["Budget"] = relationship(back_populates="categories")
+    budget: Mapped["Budget"] = relationship(back_populates="categories", lazy="raise")
     category: Mapped["Category"] = relationship(lazy="joined")

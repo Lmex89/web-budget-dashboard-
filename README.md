@@ -103,6 +103,9 @@ npm run build
 npm start          # Expo dev server
 npm run typecheck  # TypeScript check
 npm run lint       # ESLint
+
+# 8. Backend smoke tests (from backend/, venv active, DB running + seeded)
+pytest tests/test_smoke_dashboard.py -v
 ```
 
 ## First Time Setup

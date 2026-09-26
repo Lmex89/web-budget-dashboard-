@@ -7,13 +7,34 @@ auth, and migration caveats. This file adds backend-specific instructions only.
 ## Fast commands
 
 - Run tests: `pytest`
+- Run smoke tests (requires DB + seed): `pytest tests/test_smoke_dashboard.py -v`
 - Run locally (venv active): `uvicorn app.main:app --reload`
 - Run migrations: `python -m migrations.run_migrations`
 - Seed admin user: `python -m migrations.seed`
 - Lint: `ruff check .`
 - Type check: `mypy app/`
 
+## Runtime dependencies
+
+- FastAPI `0.141.1`, Pydantic `2.13.5`, Uvicorn `0.54.0`, and Loguru `0.7.3` are pinned in `requirements.txt`.
+
 > **Local `.env` required.** Copy `.env.example` → `.env` and adjust `DATABASE_URL` port to `3308`.
+
+## ORM loading (required)
+
+- Relationships default to `lazy="raise"` — load them explicitly per query with `selectinload`/`joinedload` in `infrastructure/repositories/`.
+- Never add `lazy="selectin"` to a collection: eager loading cascades across the object graph and turns a single request into 20+ SELECTs (see the smoke-test query budgets).
+- The only eager exceptions are `Budget.categories` (`selectin`, bounded) and `BudgetCategory.category` (`joined`).
+- New query methods returning ORM entities must preload exactly what the route or serializer touches.
+
+## SQL enum mapping (required)
+
+- MariaDB enum columns store lowercase values (`'pending'`, `'we_owe'`). Every `mapped_column(Enum(...))` must pass `values_callable=lambda obj: [e.value for e in obj]` so SQLAlchemy reads/writes values instead of member names.
+
+## Smoke tests
+
+- `pytest tests/test_smoke_dashboard.py -v` exercises every dashboard endpoint against the real DB plus write round-trips (expense/installment, budget, debt) and bounded SQL counts. Run it after any backend change.
+- Requires `backend/.env` (MariaDB on `localhost:3308`) and the seeded admin (`python -m migrations.seed`).
 >
 > **Docker env:** All sensitive config for Docker Compose lives in `/.env.docker` at the project root. Edit that file for Docker DB credentials, JWT secret, etc.
 

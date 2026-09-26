@@ -53,12 +53,6 @@ class AnalyticsService:
         """Expenses per month for a given year (12 data points for line chart)."""
         logger.debug(f"Monthly trend: family={family_id}, year={year}")
         async with self.uow:
-            results = []
-            for month in range(1, 13):
-                summary = await self.uow.expenses.get_family_monthly_summary(
-                    family_id, year, month
-                )
-                results.append(summary)
-            return results
+            return await self.uow.expenses.get_monthly_trend(family_id, year)
 
 

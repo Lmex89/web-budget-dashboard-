@@ -9,7 +9,7 @@ Instructions for AI coding agents working in this repository.
 ## Project at a glance
 
 - Monorepo: FastAPI backend + Vue frontend + React Native mobile client + Docker Compose.
-- Backend runtime: Python 3.13+.
+- Backend runtime: Python 3.13+ with FastAPI 0.141.1, Pydantic 2.13.5, Uvicorn 0.54.0, and Loguru 0.7.3 (pinned in `backend/requirements.txt`).
 - Primary project documentation: [README.md](README.md).
 - Backend source root: [backend/app](backend/app).
 - Mobile source root: [mobile/src](mobile/src) (Expo 52, React Native, NativeWind, Zustand, TanStack Query, React Navigation).
@@ -33,6 +33,7 @@ You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_tas
 - Run frontend locally (from `frontend/`): `npm run dev`
 - Validate frontend (from `frontend/`): `npm run typecheck`, `npm run test`, `npm run build`
 - Run backend tests (from `backend/`): `pytest`
+- Run backend smoke tests (from `backend/`, DB + seed required): `pytest tests/test_smoke_dashboard.py -v`
 - Start mobile app (from `mobile/`): `npm start` (Expo dev server)
 - Validate mobile (from `mobile/`): `npm run typecheck`, `npm run lint`
 - Backup database: `./backup-db.sh` (local `./backups/` + optional Backblaze B2 upload via rclone, both 30-day retention)
@@ -125,6 +126,8 @@ All backend code **must** follow SOLID principles:
 - Preserve Unit of Work pattern:
   - Interface: [backend/app/domains/repositories/unit_of_work.py](backend/app/domains/repositories/unit_of_work.py)
   - Implementation: [backend/app/infrastructure/repositories/unit_of_work.py](backend/app/infrastructure/repositories/unit_of_work.py)
+- ORM relationships use `lazy="raise"`: repositories must preload exactly what the route/serializer needs via `selectinload`/`joinedload`. Never add `lazy="selectin"` to a collection — it eager-loads recursively and turns one request into 20+ SELECTs.
+- SQLAlchemy `Enum` columns must pass `values_callable=lambda obj: [e.value for e in obj]` to match the lowercase values stored in MariaDB enum columns.
 
 ## Logging conventions (required)
 
@@ -251,6 +254,7 @@ BREAKING CHANGE: expense list response now wraps data under `items` key
 - Audit log API flow (list): [backend/app/api/v1/audit_logs.py](backend/app/api/v1/audit_logs.py)
 - Service layer entry point: [backend/app/dependencies/services.py](backend/app/dependencies/services.py)
 - Domain models (all entities): [backend/app/models/\_\_init\_\_.py](backend/app/models/__init__.py)
+- Dashboard API smoke tests: [backend/tests/test_smoke_dashboard.py](backend/tests/test_smoke_dashboard.py)
 - Exception hierarchy: [backend/app/core/exceptions.py](backend/app/core/exceptions.py)
 - Decimal-safe JSON helper: [backend/app/core/serialization.py](backend/app/core/serialization.py)
 - Dashboard view: [frontend/src/views/DashboardView.vue](frontend/src/views/DashboardView.vue)
