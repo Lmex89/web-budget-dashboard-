@@ -172,6 +172,34 @@ All backend code **must** follow SOLID principles:
 - Mobile bottom navigation in `frontend/src/components/layout/BottomNav.vue` must render icons/labels as native Vue template nodes (no `v-html` HTML injection) to keep all tabs visible on iOS Safari.
 - Mobile header avatar and desktop sidebar sign-out actions must await auth logout before navigating to `/login`; the mobile avatar is an accessible sign-out button.
 
+## Python code style (required)
+
+Applies to all Python code under `backend/` (and any future Python tooling). Validate with `ruff check .` and `mypy app/` before committing backend changes.
+
+- **Docstrings over inline comments.** Every module, class, and public function gets a PEP 257 docstring: one-line summary in imperative mood (`"""Return the parsed header."""`, not `"""This returns..."""`), followed by Args/Returns/Raises only when the signature doesn't already say it. Use Google style consistently repo-wide.
+- **Comments explain *why*, never *what*.** The code says what; comments justify decisions, constraints, and trade-offs (e.g. why `Enum` columns need `values_callable`, why raw-dict routes must call `to_jsonable`). No `# increment i` noise.
+- **Let the code self-document first.** Prefer clear names, PEP 484 type hints, and small functions over explanatory comments. If the type hint makes the comment redundant, delete the comment.
+- **Mark deviations explicitly.** Use `# TODO(username): ...` for unfinished work and `# NOTE:` / `# WARNING:` for non-obvious pitfalls (e.g. blocking I/O inside async handlers, credential loading). Never leave a bare TODO without context.
+- **Keep docs in sync.** If a change alters behavior, update the docstring and any comment it invalidates. A stale comment is worse than no comment.
+- Follow PEP 8 for formatting and PEP 20's spirit overall: *explicit is better than implicit*, *readability counts*.
+
+## Cross-language annotations (non-Python code)
+
+Python backend developers also read and maintain the repo's non-Python glue: `backup-db.sh`, `backup-db.fish`, `restore-db.sh`, `backend/Dockerfile`, `frontend/Dockerfile.dev`/`frontend/Dockerfile.prod`, `backend/migrations/sql/*.sql`, `docker-compose.yml`, `crontab-entry.txt`, and `frontend/nginx.conf`. When writing or modifying those files, add short comments translating foreign constructs into their Python equivalent so each line maps to something the reader already knows.
+
+- **Scope:** complements the Python style section above. There, comments explain *why*; here they translate *what* for Python readers — and only on non-Python code.
+- **Use a consistent marker:** `# py: <python equivalent>` on the line above or beside the construct. Example (idiom from `backup-db.sh`):
+  ```bash
+  # py: os.environ.get("RETENTION_DAYS", "30") — string, not int
+  RETENTION_DAYS="${RETENTION_DAYS:-30}"
+  ```
+- **Annotate the idiom, not the obvious:** `set -euo pipefail` (fail-fast + unhandled-exception semantics), `source`/`.` (`exec(open(path).read())`), `$(...)` (function return values), `${VAR:-default}` (`os.environ.get`), `trap` (`atexit`/`finally`), pipes (`subprocess`), globs (`glob.glob`), `docker exec` (running a command inside another environment). Skip `echo` and plain assignments.
+- **Flag semantic gaps.** When Python has no true equivalent or the behavior differs (exit codes vs exceptions, subshell variable scope, word splitting, strings vs typed values), say so: `# py: dict.pop(...) — but no KeyError, silently returns empty`. A misleading equivalence is worse than none.
+- **Keep it one line.** The annotation is a Rosetta stone, not a tutorial; concise and helpful beats exhaustive.
+- **Never embed secrets in examples.** Use variable names or placeholders (`"***"`), never real values from `.env.docker` (DB credentials, `BACK_BLAZE_*` keys, JWT secret).
+- **Don't backfill gratuitously.** Apply annotations to code you are writing or touching; do not churn every existing line. `backup-db.sh` and `restore-db.sh` already carry informal "like Python" comments — convert those to the `# py:` marker only when editing the surrounding lines.
+- Vue/TypeScript code is out of scope: frontend and mobile conventions live in [frontend/AGENTS.md](frontend/AGENTS.md) and the "Mobile client" section below. Do not add Python-translation comments to `.vue`/`.ts` files.
+
 ## Git commit conventions (required)
 
 Follow **Conventional Commits 1.0.0** for every commit (see https://www.conventionalcommits.org):
