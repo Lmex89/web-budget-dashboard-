@@ -28,6 +28,10 @@ Edit `.env.docker`:
 | `BACKEND_CORS_ORIGINS` | Comma-separated public frontend origins, e.g. `https://budget.example.com` |
 | `ENABLE_GLOBAL_TENANT_GUARD` | Keep `false` until validated in staging, then enable |
 | `BACK_BLAZE_*` | Optional offsite backups (see the README) |
+| `EMAIL_PROVIDER` | `brevo` to send real email, `console` to log only, `disabled` to turn off |
+| `EMAIL_FROM_EMAIL` / `EMAIL_FROM_NAME` | Sender identity; the address must be verified in Brevo (Senders & Domains) |
+| `EMAIL_API_KEY` (or `BREVO_API_KEY` / legacy `APIKEY_BREVO`) | Brevo API key with transactional email permission |
+| `APP_BASE_URL` | Public frontend URL used for links inside emails |
 
 ## 2. Build and start
 

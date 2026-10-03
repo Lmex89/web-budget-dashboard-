@@ -177,6 +177,23 @@ class InvalidBudgetPeriodException(ValidationException):
 
 
 #
+# ─── Email Exceptions ────────────────────────────────────────────────────────
+#
+
+class EmailProviderError(Exception):
+    """Raised by EmailProvider adapters when the upstream API call fails.
+
+    Deliberately not an AppException: email delivery is best-effort and never
+    maps to an HTTP error for the request that triggered it.
+    """
+
+    def __init__(self, provider: str, message: str, status_code: int | None = None):
+        self.provider = provider
+        self.status_code = status_code
+        super().__init__(f"[{provider}] {message}")
+
+
+#
 # ─── Serialization Helpers ───────────────────────────────────────────────────
 #
 

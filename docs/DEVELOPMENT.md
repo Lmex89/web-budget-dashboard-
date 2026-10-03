@@ -74,6 +74,7 @@ VITE_API_BASE_URL=http://localhost:8000
 | Area | Commands |
 |---|---|
 | Backend (from `backend/`) | `pytest` |
+| Backend email unit tests (no DB) | `pytest tests/test_email.py -v` |
 | Frontend (from `frontend/`) | `npm run typecheck`, `npm run test`, `npm run build` |
 | Mobile (from `mobile/`) | `npm run typecheck`, `npm run lint` |
 

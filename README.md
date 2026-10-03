@@ -19,6 +19,7 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 - **Debts** — Manage family loans and IOUs with counterparty tracking.
 - **Family Sharing** — Multi-user families with JWT-based authentication (Bearer token + HttpOnly cookie fallback, 30-day token expiry).
 - **Role-based Access** — Simple RBAC with three roles: `admin`, `member`, `viewer`.
+- **Email Notifications** — Provider-agnostic transactional email (Brevo adapter): welcome on registration, family invitations, and an admin test endpoint.
 
 ## Documentation
 
@@ -36,9 +37,11 @@ A production-ready monorepo for managing family finances, built with Clean Archi
 │   │   ├── db/                 # Async SQLAlchemy engine and tenant guard
 │   │   ├── dependencies/       # FastAPI dependency injection wiring
 │   │   ├── domains/
+│   │   │   ├── email/          # Email value objects + provider port
 │   │   │   ├── repositories/   # Repository and Unit of Work interfaces
 │   │   │   └── services/       # Domain business logic
 │   │   ├── infrastructure/
+│   │   │   ├── email/          # Brevo/console/disabled email adapters
 │   │   │   └── repositories/   # SQLAlchemy repository implementations
 │   │   ├── models/             # ORM entities
 │   │   └── schemas/            # Pydantic request and response DTOs
@@ -257,6 +260,50 @@ BACK_BLAZE_DIR=web-budget-family
 > Note: Backblaze requires **both** the Application Key ID and the secret.
 > `BACK_BLAZE_KEY_ID` is the long alphanumeric ID (often starting with `00`),
 > not the `K005…` secret itself.
+
+## Email Notifications (provider-agnostic)
+
+Transactional email goes through an `EmailProvider` port with adapters for
+Brevo (`backend/app/infrastructure/email/brevo.py`), console logging, and a
+disabled no-op. The provider is selected with `EMAIL_PROVIDER` — swapping
+backends needs no code changes outside `backend/app/infrastructure/email/`.
+
+| Trigger | Email |
+|---|---|
+| `POST /api/v1/auth/register` | Welcome email |
+| `POST /api/v1/auth/users` (admin) | Family invitation with the temporary password |
+
+Emails are sent after the HTTP response via FastAPI `BackgroundTasks` and are
+best-effort: a provider failure is logged and never fails the request.
+
+```bash
+# .env.docker (Docker) or backend/.env (local)
+EMAIL_PROVIDER=brevo                 # disabled | console | brevo
+EMAIL_API_KEY=                       # generic key; BREVO_API_KEY or legacy APIKEY_BREVO also work
+EMAIL_FROM_EMAIL=                    # must be a verified sender in Brevo
+EMAIL_FROM_NAME=Family Budget
+APP_BASE_URL=http://localhost:5173   # optional link target inside emails
+```
+
+```bash
+# Restart the backend so the new env is loaded, then send a diagnostic email
+docker compose up -d backend
+
+# Login as admin and grab the token
+TOKEN=$(curl -s -X POST http://localhost:8003/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@family.com","password":"admin123"}' | jq -r '.data.access_token')
+
+# Send the test email (admin only)
+curl -X POST http://localhost:8003/api/v1/emails/test \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"to":"you@example.com"}'
+```
+
+With `EMAIL_PROVIDER=console`, emails are logged instead of sent (useful for
+local development). Brevo requires the sender address to be verified under
+**Senders & Domains**, and the API key needs transactional email permission.
 
 ## Local Development
 

@@ -1,12 +1,14 @@
 """Authentication and user management API endpoints."""
 import uuid
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 from loguru import logger
 
 from app.dependencies.auth import get_current_active_user, require_admin
+from app.dependencies.email import get_email_service
 from app.dependencies.unit_of_work import get_unit_of_work
 from app.domains.repositories.unit_of_work import IUnitOfWork
+from app.domains.services.email_service import EmailService
 from app.schemas.user import (
     UserCreate,
     UserLogin,
@@ -37,7 +39,9 @@ auth_protected_router = APIRouter(
 @auth_public_router.post("/register", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     data: UserCreate,
+    background_tasks: BackgroundTasks,
     uow: IUnitOfWork = Depends(get_unit_of_work),
+    email_service: EmailService = Depends(get_email_service),
 ):
     """Register a new user and create a new family."""
     logger.info(f"Registering user: email={data.email}")
@@ -60,6 +64,13 @@ async def register(
         await uow.users.create(user)
 
     logger.info(f"User registered: id={user.id}, email={user.email}, family={family.id}")
+    # Best-effort notification: runs after the response, failures only logged.
+    background_tasks.add_task(
+        email_service.send_welcome_email,
+        to=user.email,
+        full_name=user.full_name,
+        family_name=family.name,
+    )
     return BaseResponse(data=UserResponse.model_validate(user).model_dump())
 
 
@@ -125,8 +136,10 @@ async def list_family_users(
 @auth_protected_router.post("/users", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def add_user_to_family(
     data: UserAddToFamily,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(require_admin),
     uow: IUnitOfWork = Depends(get_unit_of_work),
+    email_service: EmailService = Depends(get_email_service),
 ):
     """Add a new user to the existing family (admin only)."""
     logger.info(f"Adding user to family: email={data.email}, family={current_user.family_id}")
@@ -146,6 +159,15 @@ async def add_user_to_family(
         await uow.users.create(user)
 
     logger.info(f"User added to family: id={user.id}, email={user.email}")
+    # Best-effort notification: runs after the response, failures only logged.
+    background_tasks.add_task(
+        email_service.send_family_invitation,
+        to=user.email,
+        full_name=user.full_name,
+        family_name=current_user.family.name,
+        temporary_password=data.password,
+        invited_by=current_user.full_name,
+    )
     return BaseResponse(data=UserResponse.model_validate(user).model_dump())
 
 

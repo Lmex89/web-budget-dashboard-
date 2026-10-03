@@ -80,6 +80,7 @@ python -m migrations.run_migrations    # Run DB migrations
 # Testing
 pytest                                 # Run all tests
 pytest -v                              # Verbose
+pytest tests/test_email.py -v            # Email unit tests (no DB required)
 pytest tests/test_smoke_dashboard.py -v  # Dashboard API smoke tests (DB + seed required)
 ```
 
@@ -90,6 +91,11 @@ Copy `.env.example` to `.env` and adjust as needed. At minimum set `DATABASE_URL
 | Variable | Description | Default |
 |---|---|---|
 | `ENABLE_GLOBAL_TENANT_GUARD` | Enables the global SQLAlchemy tenant guard (defense-in-depth family filtering) | `false` |
+| `EMAIL_PROVIDER` | Email backend: `disabled`, `console` (log only), or `brevo` | `disabled` |
+| `EMAIL_API_KEY` / `BREVO_API_KEY` / `APIKEY_BREVO` | Email API key (generic name preferred; legacy `APIKEY_BREVO` still works) | empty |
+| `EMAIL_FROM_EMAIL` | Verified sender address at the provider | empty |
+| `EMAIL_FROM_NAME` | Sender display name | `Family Budget` |
+| `APP_BASE_URL` | Frontend URL used for links inside emails | empty |
 
 ## Database migrations
 

@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
+    # Email (provider-agnostic; Brevo is the bundled adapter)
+    EMAIL_PROVIDER: str = "disabled"  # disabled | console | brevo
+    EMAIL_API_KEY: str = ""  # generic key, preferred
+    BREVO_API_KEY: str = ""  # Brevo-specific key
+    # Legacy env names kept so existing .env files keep working.
+    APIKEY_BREVO: str = ""
+    APIKYE_BREVO: str = ""
+    EMAIL_FROM_EMAIL: str = ""  # must be a verified sender at the provider
+    EMAIL_FROM_NAME: str = "Family Budget"
+    APP_BASE_URL: str = ""  # optional frontend URL used for links in emails
+
     # Multi-tenancy
     # Enables the global SQLAlchemy tenant guard (`with_loader_criteria`) that
     # injects `family_id == <active family>` into every SELECT on tenant-owned
@@ -40,6 +51,11 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]
+
+    @property
+    def resolved_email_api_key(self) -> str:
+        """Return the first configured email API key, generic names first."""
+        return self.EMAIL_API_KEY or self.BREVO_API_KEY or self.APIKEY_BREVO or self.APIKYE_BREVO
 
     # Cookies
     COOKIE_SECURE: bool = False

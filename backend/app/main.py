@@ -17,6 +17,7 @@ from app.core.exceptions import (
 )
 from app.core.middleware import SecurityHeadersMiddleware
 from app.dependencies.tenant import tenant_scope
+from app.dependencies.email import get_email_provider
 from app.api.v1.expenses import router as expenses_router
 from app.api.v1.auth import auth_public_router, auth_protected_router
 from app.api.v1.categories import router as categories_router
@@ -24,6 +25,7 @@ from app.api.v1.credit_cards import router as credit_cards_router
 from app.api.v1.debts import router as debts_router
 from app.api.v1.audit_logs import router as audit_logs_router
 from app.api.v1.budgets import router as budgets_router
+from app.api.v1.emails import router as emails_router
 
 
 @asynccontextmanager
@@ -32,6 +34,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
     logger.debug(f"Environment: {settings.ENVIRONMENT}")
     logger.debug(f"Database: {settings.DATABASE_URL.split('@')[-1] if '@' in settings.DATABASE_URL else 'configured'}")
+    logger.info(f"Email provider: {get_email_provider().name}")
     yield
     logger.info(f"Shutting down {settings.PROJECT_NAME}")
 
@@ -69,6 +72,7 @@ def create_application() -> FastAPI:
     application.include_router(debts_router, prefix="/api/v1")
     application.include_router(audit_logs_router, prefix="/api/v1")
     application.include_router(budgets_router, prefix="/api/v1")
+    application.include_router(emails_router, prefix="/api/v1")
 
     @application.get("/health", tags=["Health"])
     async def health_check():

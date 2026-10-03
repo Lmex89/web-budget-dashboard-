@@ -2,11 +2,13 @@
 
 See [root AGENTS.md](../AGENTS.md) and the [README architecture structure](../README.md#architecture-structure)
 for architecture boundaries, service layer rules, transaction conventions, logging,
-auth, and migration caveats. This file adds backend-specific instructions only.
+Python code style, auth, and migration caveats. This file adds backend-specific
+instructions only.
 
 ## Fast commands
 
 - Run tests: `pytest`
+- Run email unit tests (no DB needed): `pytest tests/test_email.py -v`
 - Run smoke tests (requires DB + seed): `pytest tests/test_smoke_dashboard.py -v`
 - Run locally (venv active): `uvicorn app.main:app --reload`
 - Run migrations: `python -m migrations.run_migrations`
@@ -17,6 +19,7 @@ auth, and migration caveats. This file adds backend-specific instructions only.
 ## Runtime dependencies
 
 - FastAPI `0.141.1`, Pydantic `2.13.5`, Uvicorn `0.54.0`, and Loguru `0.7.3` are pinned in `requirements.txt`.
+- `httpx` (pinned) powers the Brevo transactional email adapter; no email SDK is installed.
 
 > **Local `.env` required.** Copy `.env.example` → `.env` and adjust `DATABASE_URL` port to `3308`.
 
@@ -30,6 +33,14 @@ auth, and migration caveats. This file adds backend-specific instructions only.
 ## SQL enum mapping (required)
 
 - MariaDB enum columns store lowercase values (`'pending'`, `'we_owe'`). Every `mapped_column(Enum(...))` must pass `values_callable=lambda obj: [e.value for e in obj]` so SQLAlchemy reads/writes values instead of member names.
+
+## Email (provider-agnostic)
+
+- `EmailProvider` port: `app/domains/email/provider.py`; `EmailService` (templates + best-effort delivery): `app/domains/services/email_service.py`.
+- Adapters in `app/infrastructure/email/`: `brevo.py` (httpx → `POST /v3/smtp/email`), `console.py` (dev logs), `disabled.py`; `EMAIL_PROVIDER` selection lives in `factory.py`.
+- Never import Brevo outside `brevo.py`; add new transports as `EmailProvider` implementations and register them in the factory.
+- Registration/invitation triggers use FastAPI `BackgroundTasks` and pass primitive values (never ORM instances).
+- Env: `EMAIL_PROVIDER` (`disabled` | `console` | `brevo`), `EMAIL_API_KEY` / `BREVO_API_KEY` / legacy `APIKEY_BREVO`, `EMAIL_FROM_EMAIL`, `EMAIL_FROM_NAME`, `APP_BASE_URL`.
 
 ## Smoke tests
 
@@ -110,4 +121,10 @@ backend/app/
 | `app/domains/repositories/expense.py` | Expense repository interface (includes `get_by_family_csv`) |
 | `app/infrastructure/repositories/expense.py` | SQLAlchemy expense repository implementation |
 | `app/models/__init__.py` | All ORM models |
+| `app/domains/email/provider.py` | `EmailProvider` port (transactional send contract) |
+| `app/domains/services/email_service.py` | Email templates + best-effort delivery (welcome, invitation) |
+| `app/infrastructure/email/brevo.py` | Brevo `POST /v3/smtp/email` adapter (httpx) |
+| `app/infrastructure/email/factory.py` | `EMAIL_PROVIDER` → disabled/console/brevo |
+| `app/dependencies/email.py` | Email provider/service DI |
+| `app/api/v1/emails.py` | Admin-only email test endpoint |
 | `migrations/sql/` | Numbered raw SQL files |

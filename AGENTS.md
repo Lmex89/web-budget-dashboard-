@@ -33,6 +33,7 @@ You MUST use codegraph_* tools (codegraph_find_symbol, codegraph_context_for_tas
 - Run frontend locally (from `frontend/`): `npm run dev`
 - Validate frontend (from `frontend/`): `npm run typecheck`, `npm run test`, `npm run build`
 - Run backend tests (from `backend/`): `pytest`
+- Run backend email unit tests (no DB required, from `backend/`): `pytest tests/test_email.py -v`
 - Run backend smoke tests (from `backend/`, DB + seed required): `pytest tests/test_smoke_dashboard.py -v`
 - Start mobile app (from `mobile/`): `npm start` (Expo dev server)
 - Validate mobile (from `mobile/`): `npm run typecheck`, `npm run lint`
@@ -128,6 +129,16 @@ All backend code **must** follow SOLID principles:
   - Implementation: [backend/app/infrastructure/repositories/unit_of_work.py](backend/app/infrastructure/repositories/unit_of_work.py)
 - ORM relationships use `lazy="raise"`: repositories must preload exactly what the route/serializer needs via `selectinload`/`joinedload`. Never add `lazy="selectin"` to a collection — it eager-loads recursively and turns one request into 20+ SELECTs.
 - SQLAlchemy `Enum` columns must pass `values_callable=lambda obj: [e.value for e in obj]` to match the lowercase values stored in MariaDB enum columns.
+
+## Email notifications (required)
+
+- Port + value objects: [backend/app/domains/email/provider.py](backend/app/domains/email/provider.py) and `domains/email/models.py`.
+- Service: [backend/app/domains/services/email_service.py](backend/app/domains/services/email_service.py) owns rendering (welcome, invitation) and never raises on provider failure — it returns `EmailSendResult(success=False)`.
+- Adapters: [backend/app/infrastructure/email/](backend/app/infrastructure/email/) (`brevo.py`, `console.py`, `disabled.py`); selection in `factory.py` via `EMAIL_PROVIDER` (`disabled` | `console` | `brevo`). Never import Brevo outside `brevo.py`; a new backend implements `EmailProvider` and is added to the factory.
+- DI: [backend/app/dependencies/email.py](backend/app/dependencies/email.py).
+- Env (generic first): `EMAIL_API_KEY`, `BREVO_API_KEY`, legacy `APIKEY_BREVO`/`APIKYE_BREVO`, `EMAIL_FROM_EMAIL`, `EMAIL_FROM_NAME`, `APP_BASE_URL`. Live in `.env.docker` (Docker) and `backend/.env` (local).
+- Triggers run as FastAPI `BackgroundTasks` after the response and pass plain values, never ORM instances (the request session is closed by then).
+- Admin diagnostics: `POST /api/v1/emails/test` in [backend/app/api/v1/emails.py](backend/app/api/v1/emails.py).
 
 ## Logging conventions (required)
 
@@ -257,6 +268,11 @@ BREAKING CHANGE: expense list response now wraps data under `items` key
 - Dashboard API smoke tests: [backend/tests/test_smoke_dashboard.py](backend/tests/test_smoke_dashboard.py)
 - Exception hierarchy: [backend/app/core/exceptions.py](backend/app/core/exceptions.py)
 - Decimal-safe JSON helper: [backend/app/core/serialization.py](backend/app/core/serialization.py)
+- Email provider port: [backend/app/domains/email/provider.py](backend/app/domains/email/provider.py)
+- Email service (welcome/invitation templates): [backend/app/domains/services/email_service.py](backend/app/domains/services/email_service.py)
+- Brevo email adapter: [backend/app/infrastructure/email/brevo.py](backend/app/infrastructure/email/brevo.py)
+- Email DI wiring: [backend/app/dependencies/email.py](backend/app/dependencies/email.py)
+- Admin email test endpoint: [backend/app/api/v1/emails.py](backend/app/api/v1/emails.py)
 - Dashboard view: [frontend/src/views/DashboardView.vue](frontend/src/views/DashboardView.vue)
 - Budget view: [frontend/src/views/Budget/Index.vue](frontend/src/views/Budget/Index.vue)
 - Budget store: [frontend/src/stores/budgets.ts](frontend/src/stores/budgets.ts)
